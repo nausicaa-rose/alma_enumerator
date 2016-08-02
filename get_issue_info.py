@@ -115,13 +115,16 @@ def get_info_from_description(item):
     # This pattern matches a field that is either a single hyphen or slash.
     r_exp = re.compile(r'^[-/]$')
     
+    # This pattern is used to catch strings like 2011-Win or 2011/Win
+    year_mop = re.compile(r'(\d+)(-|/)(\w+)')
+    
     to_remove = []
     # Check each field in info
     for i in info:      
         # Scrub '.(),:' from text for better matching
         info[info.index(i)] = bad_charsp.sub('', i)
         i = bad_charsp.sub('', i)
-        
+               
         # Find fields that include only alphabetic characters
         if has_digitsp.match(i) == None and r_exp.match(i) == None:
             is_ok = False
@@ -142,6 +145,19 @@ def get_info_from_description(item):
     # Remove fields from info that we don't want.
     for i in to_remove:
         info.remove(i)
+    
+    # Sometimes, we might encounter a description like 'v 46 July 2005-June 2006',
+    # where there is no space surrounding the hyphen (or slash), which produces
+    # a field that looks like this '2005-June', which will not process correctly.
+    # To deal with this we split the field to look like ('2005', '-', 'June'),
+    # drop the original field, and put the three new fields in its place.
+    for i in info:
+        if year_mop.match(i) != None:
+            index = info.index(i)
+            head = info[0:index]
+            tail = info[(index + 1):]
+            body = list(year_mop.match(i).groups())
+            info = head + body + tail
     
     print(item)
     print(info)
@@ -184,9 +200,7 @@ def get_info_from_description(item):
                 item_info = handle_record_error(item, item_info)
        # ['no.42', 'Win', '2009', '-', 'Win', '2010']
         elif len(info) == 6:
-            if has_digitsp.match(info[1]) == None and has_digitsp.match(info[4]) == None and info[3] == '-':
-                print('Six. Matched.')
-               
+            if has_digitsp.match(info[1]) == None and has_digitsp.match(info[4]) == None and info[3] == '-':              
                 if info[2] == info[5]:
                     item_info['chronology_i'] = snarf_numerals(info[5])
                 else:
@@ -259,7 +273,7 @@ def get_info_from_description(item):
                 item_info['chronology_j'] = mo_split[0]
             print(item_info['chronology_j'])
 
-    return item_info        
+    return item_info            
 
             
 def handle_record_error(item, item_info):
