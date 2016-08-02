@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from settings import *
+from settings import api_key, mms_id, output_file, error_file, base_url
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -77,14 +77,17 @@ def get_info_from_description(item):
     converted to a format compatible with Alma's enumeration and chronology fields.
     """
     item_info = {}
+    info = item.split(' ')
     
-    # This pattern is used convert month and season words to numerals
+    # This dictonary of patterns is used convert month and season words to numerals.
+    # It's also used to identify descriptions with words that are not
+    # month or season indicators.
     date_patterns = {
                      re.compile(r'(Jan\.?|January)', re.IGNORECASE):     '01',
                      re.compile(r'(Feb\.?|February)', re.IGNORECASE):    '02',
                      re.compile(r'(Mar\.?|March)', re.IGNORECASE):       '03',
                      re.compile(r'(Apr\.?|April)', re.IGNORECASE):       '04',
-                     re.compile(r'May', re.IGNORECASE):               '05',
+                     re.compile(r'May', re.IGNORECASE):                  '05',
                      re.compile(r'(Jun\.?|June)', re.IGNORECASE):        '06',
                      re.compile(r'(Jul\.?|July)', re.IGNORECASE):        '07',
                      re.compile(r'(Aug\.?|August)', re.IGNORECASE):      '08',
@@ -96,17 +99,7 @@ def get_info_from_description(item):
                      re.compile(r'(Sum\.?|Summer)', re.IGNORECASE):      '22',
                      re.compile(r'(Fal\.?|Fall|Autumn)', re.IGNORECASE): '23',
                      re.compile(r'(Win\.?|Winter)', re.IGNORECASE):      '24',
-                     }
-
-    info = item.split(' ')                  
-    
-    # This pattern is used to remove free standing volume and number prefixes            
-    vnp = re.compile(r'^(v|vol|n|no|#|issue|iss|is)\.?\(?$', re.IGNORECASE)
-    
-    # This pattern is used to recognize volume and issue numbers prefixed with
-    # a v or no, i.e. v.45, no100, etc.
-    #volnop = re.compile(r'v?(no)?\.?\(?\d+\)?', re.IGNORECASE)
-    volnop = re.compile(r'(v|vol)?(n|no|#)?(issue|iss|is)?\.?.*', re.IGNORECASE)
+                     }                
     
     # This pattern is used to see if a field in info has numerals
     has_digitsp = re.compile(r'.*\d+')
@@ -114,35 +107,60 @@ def get_info_from_description(item):
     # This pattern is used to remove periods, parentheses, and commas that can
     # mess things up if they're left in.
     bad_charsp = re.compile(r'[\.\(\),\\:]')
-    
-    # This pattern is used to try and filter out items with extra descriptive words
-    # that likely won't fit the patterns the parsing algorithm can handle
-    bad_words = re.compile(r'(index|abstracts|supplements)', re.IGNORECASE)
-    
+
     # This pattern matches hyphens and slashes and is used to recognize and edit
     # date and issue ranges like 1995-1999 or 12/13.
     rp = re.compile(r'[-/]')
     
-    for i in info:
-        # Remove volume or number indicators that are in their own field
-        if vnp.match(i) != None:
-            info.remove(i)
+    # This pattern matches a field that is either a single hyphen or slash.
+    r_exp = re.compile(r'^[-/]$')
+    
+    to_remove = []
+    # Check each field in info
+    for i in info:      
         # Scrub '.(),:' from text for better matching
-        else:
-            info[info.index(i)] = bad_charsp.sub('', i)
+        info[info.index(i)] = bad_charsp.sub('', i)
+        i = bad_charsp.sub('', i)
+        
+        # Find fields that include only alphabetic characters
+        if has_digitsp.match(i) == None and r_exp.match(i) == None:
+            is_ok = False
+            for key in date_patterns:
+                # If the field is in date_patterns, it's an indicator of month
+                # or season. Everything's good and we move on to the next field.
+                if key.match(i):
+                    is_ok = True
+                    break
+            
+            # If the field didn't match any of the date_patterns, it is probably
+            # a descriptive word like 'Abstracts', 'INDEX', etc, or a 
+            # volume/number indicator like 'v.', 'no.', etc. If that's the 
+            # case, add it to the removal list.
+            if is_ok == False:
+                to_remove.append(i)
+    
+    # Remove fields from info that we don't want.
+    for i in to_remove:
+        info.remove(i)
     
     print(item)
     print(info)
     # If the record doesn't begin with a volume/issue number, has less than two 
-    # or more than 7 fields, or if it has 6 fields, or if its description included the word 'index', 
-    # mark it as an error and return.
-    if volnop.match(info[0]) == None or len(info) < 2 or len(info) > 7 or bad_words.search(item) != None:
-        print('{} appears to be irregular. Please correct by hand.'.format(item))
-        item_info['error'] = item
+    # or more than 7 fields, mark it as an error and return.
+    if has_digitsp.match(info[0]) == None or len(info) < 2 or len(info) > 7:
+        item_info = handle_record_error(item, item_info)
+    # If the record has already been identified as an error, do nothing and let
+    # item_info be returned as it is.
+    elif 'error' in item_info:
+        pass
     else:
         # If we've made it here, the first index should always be the top level of enumeration       
         # Get the volume number, filtering out text like 'v', 'v.' or 'v(', etc.
-        item_info['enumeration_a'] = snarf_numerals(info[0])
+        if has_digitsp.match(info[0]):
+            item_info['enumeration_a'] = snarf_numerals(info[0])
+        # If the first index doesn't include a number, somethings wrong.
+        else:
+            item_info = handle_record_error(item, item_info)
         
         # Set the defaults for all the other fields, so that in case there's nothing
         # to put in them, our CSV columns don't get messed up.
@@ -163,8 +181,7 @@ def get_info_from_description(item):
                 
                 item_info['chronology_j'] = '/'.join([info[2], info[5]])
             else:
-                print('{} appears to be irregular. Please correct by hand.'.format(item))
-                item_info['error'] = item
+                item_info = handle_record_error(item, item_info)
        # ['no.42', 'Win', '2009', '-', 'Win', '2010']
         elif len(info) == 6:
             if has_digitsp.match(info[1]) == None and has_digitsp.match(info[4]) == None and info[3] == '-':
@@ -177,9 +194,9 @@ def get_info_from_description(item):
                 
                 item_info['chronology_j'] = '/'.join([info[1], info[4]])
             else:
-                print('{} appears to be irregular. Please correct by hand.'.format(item))
-                item_info['error'] = item
+                item_info = handle_record_error(item, item_info)
         # If item has five fields, it will be treated as if it records volume, issue, day, month, year
+        # ['v.43 'no.2', '4', 'Mar', '2009'] or ['v.43 'no.2', 'Mar', '4', '2009']
         elif len(info) == 5:
             item_info['enumeration_b'] = snarf_numerals(info[1])
             # This matches the date pattern Day Month Year, i.e. 23 Mar 2016
@@ -241,10 +258,15 @@ def get_info_from_description(item):
             else:
                 item_info['chronology_j'] = mo_split[0]
             print(item_info['chronology_j'])
-    #print('f yeah {}'.format(list(item_info.values()))) 
-    print(item_info)
-    return item_info         
+
+    return item_info        
+
             
+def handle_record_error(item, item_info):
+    print('{} appears to be irregular. Please correct by hand.'.format(item))
+    item_info['error'] = item
+    return item_info
+    
     
 def snarf_numerals(string):
     """
