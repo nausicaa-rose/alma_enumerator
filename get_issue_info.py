@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from settings import api_key, mms_id, output_file, error_file, base_url
+from .settings import api_key, mms_id, output_file, error_file, base_url
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -116,7 +116,7 @@ def get_info_from_description(item):
     r_exp = re.compile(r'^[-/]$')
     
     # This pattern is used to catch strings like 2011-Win or 2011/Win
-    year_mop = re.compile(r'(\d+)(-|/)(\w+)')
+    year_mop = re.compile(r'(\d+)(-|/)([a-z][A-Z]+)')
     
     to_remove = []
     # Check each field in info
