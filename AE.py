@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from settings import api_key, error_file
+from settings import api_key
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -314,7 +314,7 @@ def write_header_to_csv(output_file, item_info, delimeter=','):
         fh.write('{}\n'.format(delimeter.join(item_info[0].keys())))
         
     
-def output_to_csv(output_file, item_info, delimeter=','):
+def output_to_csv(output_file, error_file, item_info, delimeter=','):
     """
     Write each item's info as a row in our output file. Write records with
     errors to our error file.

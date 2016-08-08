@@ -1,0 +1,46 @@
+# -*- coding: utf-8 -*-
+"""ae_fetch
+
+Usage:
+    ae_fetch [(-m | --mms-id) <mms>] [(-o | --out-file) <of>] [(-e | --error-file) <ef>] [(-a | --api-key) <api>]
+"""
+
+from settings import api_key, mms_id, output_file, error_file, base_url
+from AE import get_holdings, get_item_info, write_header_to_csv, output_to_csv
+from docopt import docopt
+
+def fetch(mms_id, output_file, error_file, api_key, base_url):    
+    # Get holdings id(s)
+    holdings = get_holdings(base_url, mms_id, api_key)
+    
+    # For each holdings ID, write the ID to the output file, get the information
+    # for all of the holdings' items, write the field headers to the output file,
+    # then write the item information to the output file and write errors to the 
+    # error file.
+    for h in holdings:
+        with open(output_file, 'a', encoding='utf-8') as fh:
+            fh.write('{}\n'.format(h))
+    
+        item_info = get_item_info(base_url, mms_id, holdings)
+        write_header_to_csv(output_file, item_info)
+        output_to_csv(output_file, error_file, item_info)
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    
+    if args['-m'] or args['--mms_id']:
+        mms_id = args['<mms>']
+
+    if args['-o'] or args['--output-file']:
+        output_file = args['<of>']
+
+    if args['-e'] or args['--error-file']:
+        error_file = args['<ef>']   
+
+    if args['-a'] or args['--api-key']:
+        api_key = args['<api>']
+
+    fetch(mms_id, output_file, error_file, api_key, base_url)
+    
+
+  

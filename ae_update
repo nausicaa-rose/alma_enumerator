@@ -1,0 +1,38 @@
+# -*- coding: utf-8 -*-
+"""ae_update
+
+Usage:
+    ae_update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [(-a | --api-key) <api>]
+"""
+
+from settings import api_key, mms_id, input_file, base_url
+from AE import get_info_from_csv, get_item_xml, update_item_xml, update_item
+
+def update(mms_id, input_file, api_key, base_url):
+    items_to_update = get_info_from_csv(input_file)
+
+    for holdings in items_to_update:
+        for item in items_to_update[holdings]:
+            xml = get_item_xml(base_url, mms_id, holdings, item['id'], api_key)
+            updated_xml = update_item_xml(xml, item)
+            update_item(base_url, mms_id, holdings, item['id'], api_key, updated_xml)
+            
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    
+    if args['-m'] or args['--mms_id']:
+        mms_id = args['<mms>']
+
+    if args['-i'] or args['--input-file']:
+        input_file = args['<if>']  
+
+    if args['-a'] or args['--api-key']:
+        api_key = args['<api>']
+
+    update(mms_id, input_file, api_key, base_url)
+    
+    
+
+        
+
