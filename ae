@@ -1,0 +1,8 @@
+# -*- coding: utf-8 -*-
+"""ae
+
+Usage:
+    ae fetch [(-m | --mms-id) <mms>] [(-o | --out-file) <of>] [(-e | --error-file) <ef>] [(-a | --api-key) <api>]
+    ae update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [(-a | --api-key) <api>]
+"""
+

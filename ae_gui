@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from tkinter import *
+from tkinter import ttk
+
+from settings import api_key, mms_id, output_file, error_file, input_file, base_url
+from ae_fetch import fetch
+from ae_update import update
+
+def foo1():
+    pass
+
+def foo2():
+    pass
+
+root = Tk()
+root.title("Alma Enumerator")
+
+mainframe = ttk.Frame(root, padding="3 3 12 12")
+mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+mainframe.columnconfigure(0, weight=1)
+mainframe.rowconfigure(0, weight=1)
+
+mms_id = StringVar()
+
+mms_entry = ttk.Entry(mainframe, width=14, textvariable=mms_id)
+mms_entry.grid(column=2, row=1, sticky=(W, E))
+ttk.Label(mainframe, text="MMS ID").grid(column=3, row=1, sticky=W)
+
+mms_entry = ttk.Entry(mainframe, width=14, textvariable=output_file)
+mms_entry.grid(column=2, row=2  , sticky=(W, E))
+ttk.Label(mainframe, text="Output File").grid(column=3, row=2, sticky=W)
+
+mms_entry = ttk.Entry(mainframe, width=14, textvariable=input_file)
+mms_entry.grid(column=2, row=3, sticky=(W, E))
+ttk.Label(mainframe, text="Input File").grid(column=3, row=3, sticky=W)
+
+mms_entry = ttk.Entry(mainframe, width=14, textvariable=error_file)
+mms_entry.grid(column=2, row=4, sticky=(W, E))
+ttk.Label(mainframe, text="Error File").grid(column=3, row=4, sticky=W)
+
+mms_entry = ttk.Entry(mainframe, width=14, textvariable=api_key)
+mms_entry.grid(column=2, row=5, sticky=(W, E))
+ttk.Label(mainframe, text="API Key").grid(column=3, row=5, sticky=W)
+
+ttk.Button(mainframe, text="Fetch", command=foo1).grid(column=2, row=6, sticky=W)
+ttk.Button(mainframe, text="Update", command=foo2).grid(column=3, row=6, sticky=E)
+
+for child in mainframe.winfo_children(): child.grid_configure(padx=5, pady=5)
+
+mms_entry.focus()
+
+root.mainloop()
+
+#fetch(mms_id, output_file, error_file, api_key, base_url)
+#update(mms_id, input_file, api_key, base_url)
