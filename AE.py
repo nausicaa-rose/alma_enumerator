@@ -157,15 +157,12 @@ def get_info_from_description(item):
     # drop the original field, and put the three new fields in its place.
     for i in info:
         if year_mop.match(i) != None:
-            print('Gotcha!')
             index = info.index(i)
             head = info[0:index]
             tail = info[(index + 1):]
             body = list(year_mop.match(i).groups())
             info = head + body + tail
     
-    print(item)
-    print(info)
     # If the record doesn't begin with a volume/issue number, has less than two 
     # or more than 7 fields, mark it as an error and return.
     if has_digitsp.match(info[0]) == None or len(info) < 2 or len(info) > 7:
@@ -192,7 +189,6 @@ def get_info_from_description(item):
         # ['v.65', 'no.3', 'May', '2012', '-', 'Jun', '2012']
         if len(info) == 7:
             if has_digitsp.match(info[2]) == None and has_digitsp.match(info[5]) == None and rp.match(info[4]) != None:
-                print('Seven. Matched.')
                 item_info['enumeration_b'] = snarf_numerals(info[1])
                 
                 if info[3] == info[6]:
@@ -217,17 +213,31 @@ def get_info_from_description(item):
         # If item has five fields, it will be treated as if it records volume, issue, day, month, year
         # ['v.43 'no.2', '4', 'Mar', '2009'] or ['v.43 'no.2', 'Mar', '4', '2009']
         elif len(info) == 5:
+            print(info)
             item_info['enumeration_b'] = snarf_numerals(info[1])
-            # This matches the date pattern Day Month Year, i.e. 23 Mar 2016
-            if has_digitsp.match(info[2]) != None:
+            # This matches the date pattern Day Month Year, i.e. 
+            # ['v.43 'no.2', '4', 'Mar', '2009']
+            if has_digitsp.match(info[2]) != None and rp.match(info[3]) == None:
+                print('boo1')
                 item_info['chronology_k'] = snarf_numerals(info[2])
                 item_info['chronology_j'] = info[3]
-            # This matches the date pattern Month Day Year, i.e. Mar 23 2016
+                item_info['chronology_i'] = snarf_numerals(info[4])
+            # This matches the date pattern Month Day Year, i.e. 
+            # ['v.43 'no.2', 'Mar', '4', '2009']
             elif has_digitsp.match(info[1]) != None:
+                print('boo2')
                 item_info['chronology_j'] = info[2]
                 item_info['chronology_k'] = snarf_numerals(info[3])
-                
-            item_info['chronology_i'] = info[4]
+                item_info['chronology_i'] = snarf_numerals(info[4])
+            # This matches the date pattern Season Year - Year
+            # i.e. ['no52', 'Win', '2013', '-', '2014']
+            elif has_digitsp.match(info[1]) == None and rp.match(info[3]) != None:
+                print("Match!")
+                item_info['chronology_j'] == info[1]
+                item_info['chronology_i'] == snarf_numerals('/'.join([info[2], info[4]]))
+            else:
+                handle_record_error(item, item_info)
+                         
         # If the item does not record days, then treat it like it records 
         # issue, month, day, year or volume, issue, month, year
         elif len(info) == 4:
@@ -262,12 +272,10 @@ def get_info_from_description(item):
         # will be converted to 01/02.
         if item_info['chronology_j'] != '':
             mo_split = rp.split(item_info['chronology_j'])
-            #print('split {}'.format(mo_split))
             for i in range(len(mo_split)):
                 for key in date_patterns:
                     if key.match(mo_split[i]):
                         mo_split[i] = date_patterns[key]
-                        print(mo_split[i])
                         break
         
             # Recombine multiple dates
@@ -276,7 +284,7 @@ def get_info_from_description(item):
             # Otherwise, just set chronology_j to the one date
             else:
                 item_info['chronology_j'] = mo_split[0]
-            print(item_info['chronology_j'])
+
 
     return item_info            
 
@@ -380,7 +388,6 @@ def get_info_from_csv(input_file):
             info = line.split(',')
             item_info[holdings_id].append(dict(zip(keys, info)))
             
-    #print(item_info)
            
     return item_info
     
@@ -388,10 +395,8 @@ def get_info_from_csv(input_file):
 def get_item_xml(base_url, mms_id, holdings_id, item_id, api_key):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     r = requests.get(''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)]))
-    #print(r.status_code)
     item_xml = r.text
     
-    print(item_xml)
     return item_xml
     
 
@@ -409,7 +414,6 @@ def update_item_xml(item_xml, item_info):
                 soup.find('item_data').find('description').insert_before(new_tag)
     
     new_xml = str(soup)
-    #print(new_xml)
     
     return new_xml
     
@@ -419,8 +423,4 @@ def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
-    #print(url)
-    #print(item_xml)
-    r = requests.put(url, headers=headers, data=item_xml)
-    print(r.status_code)
-    print(r.text)
+    r = requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
