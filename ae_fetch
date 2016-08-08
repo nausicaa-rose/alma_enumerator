@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """ae_fetch
 
 Usage:
-    ae_fetch [(-m | --mms-id) <mms>] [(-o | --out-file) <of>] [(-e | --error-file) <ef>] [(-a | --api-key) <api>]
+    ae_fetch [(-m | --mms-id) <mms>] [(-o | --output-file) <of>] [(-e | --error-file) <ef>] [(-a | --api-key) <api>]
 """
 
 from settings import api_key, mms_id, output_file, error_file, base_url
@@ -28,7 +29,7 @@ def fetch(mms_id, output_file, error_file, api_key, base_url):
 if __name__ == '__main__':
     args = docopt(__doc__)
     
-    if args['-m'] or args['--mms_id']:
+    if args['-m'] or args['--mms-id']:
         mms_id = args['<mms>']
 
     if args['-o'] or args['--output-file']:
