@@ -113,14 +113,19 @@ def get_info_from_description(item):
     bad_charsp = re.compile(r'[\.\(\),\\:]')
 
     # This pattern matches hyphens and slashes and is used to recognize and edit
-    # date and issue ranges like 1995-1999 or 12/13.
-    rp = re.compile(r'[-/]')
+    # date and issue ranges like 1995-1999, 12/13, or 5&6.
+    rp = re.compile(r'[-/&]')
     
     # This pattern matches a field that is either a single hyphen or slash.
     r_exp = re.compile(r'^[-/]$')
     
-    # This pattern is used to catch strings like 2011-Win or 2011/Win
+    # This pattern is used to catch strings like 2011-Win or 2011/Win.
     year_mop = re.compile(r'(\d+)(-|/)([a-zA-Z]+)')
+    
+    # This pattern is used to distinguish between years and volume/issue numbers,
+    # but it may trip over long continuously numbered issues. The pattern also
+    # assumes it won't be handling records from before the 19th century.
+    is_yearp = re.compile(r'(18|19|20)\d\d')
     
     to_remove = []
     # Check each field in info
@@ -163,31 +168,26 @@ def get_info_from_description(item):
             body = list(year_mop.match(i).groups())
             info = head + body + tail
     
-    # If the record doesn't begin with a volume/issue number, has less than two 
-    # or more than 7 fields, mark it as an error and return.
-    if has_digitsp.match(info[0]) == None or len(info) < 2 or len(info) > 7:
+            
+    # Now that we're done fiddling with fields, get the length of info
+    i_len = len(info)
+    
+    # If the record has less than two or more than 7 fields, mark it as an 
+    # error and return.
+    if i_len < 2 or i_len > 7:
         item_info = handle_record_error(item, item_info)
-    # If the record has already been identified as an error, do nothing and let
-    # item_info be returned as it is.
-    elif 'error' in item_info:
-        pass
-    else:
-        # If we've made it here, the first index should always be the top level of enumeration       
-        # Get the volume number, filtering out text like 'v', 'v.' or 'v(', etc.
-        if has_digitsp.match(info[0]):
-            item_info['enumeration_a'] = snarf_numerals(info[0])
-        # If the first index doesn't include a number, somethings wrong.
-        else:
-            item_info = handle_record_error(item, item_info)
-        
-        # Set the defaults for all the other fields, so that in case there's nothing
+    else:       
+        # Set the defaults for all the fields, so that in case there's nothing
         # to put in them, our CSV columns don't get messed up.
+        item_info['enumeration_a'] = ''
         item_info['enumeration_b'] = ''
         item_info['chronology_i'] = ''
         item_info['chronology_j'] = ''
         item_info['chronology_k'] = ''
+        
         # ['v.65', 'no.3', 'May', '2012', '-', 'Jun', '2012']
-        if len(info) == 7:
+        if i_len == 7:
+            item_info['enumeration_a'] = snarf_numerals(info[0])
             if has_digitsp.match(info[2]) == None and has_digitsp.match(info[5]) == None and rp.match(info[4]) != None:
                 item_info['enumeration_b'] = snarf_numerals(info[1])
                 
@@ -200,7 +200,8 @@ def get_info_from_description(item):
             else:
                 item_info = handle_record_error(item, item_info)
        # ['no.42', 'Win', '2009', '-', 'Win', '2010']
-        elif len(info) == 6:
+        elif i_len == 6:
+            item_info['enumeration_a'] = snarf_numerals(info[0])
             if has_digitsp.match(info[1]) == None and has_digitsp.match(info[4]) == None and rp.match(info[3]) != None:              
                 if info[2] == info[5]:
                     item_info['chronology_i'] = snarf_numerals(info[5])
@@ -212,27 +213,24 @@ def get_info_from_description(item):
                 item_info = handle_record_error(item, item_info)
         # If item has five fields, it will be treated as if it records volume, issue, day, month, year
         # ['v.43 'no.2', '4', 'Mar', '2009'] or ['v.43 'no.2', 'Mar', '4', '2009']
-        elif len(info) == 5:
-            print(info)
+        elif i_len == 5:
+            item_info['enumeration_a'] = snarf_numerals(info[0])
             item_info['enumeration_b'] = snarf_numerals(info[1])
             # This matches the date pattern Day Month Year, i.e. 
             # ['v.43 'no.2', '4', 'Mar', '2009']
             if has_digitsp.match(info[2]) != None and rp.match(info[3]) == None:
-                print('boo1')
                 item_info['chronology_k'] = snarf_numerals(info[2])
                 item_info['chronology_j'] = info[3]
                 item_info['chronology_i'] = snarf_numerals(info[4])
             # This matches the date pattern Month Day Year, i.e. 
             # ['v.43 'no.2', 'Mar', '4', '2009']
             elif has_digitsp.match(info[1]) != None:
-                print('boo2')
                 item_info['chronology_j'] = info[2]
                 item_info['chronology_k'] = snarf_numerals(info[3])
                 item_info['chronology_i'] = snarf_numerals(info[4])
             # This matches the date pattern Season Year - Year
             # i.e. ['no52', 'Win', '2013', '-', '2014']
             elif has_digitsp.match(info[1]) == None and rp.match(info[3]) != None:
-                print("Match!")
                 item_info['chronology_j'] = info[1]
                 item_info['chronology_i'] = snarf_numerals('/'.join([info[2], info[4]]))
             else:
@@ -240,7 +238,8 @@ def get_info_from_description(item):
                          
         # If the item does not record days, then treat it like it records 
         # issue, month, day, year or volume, issue, month, year
-        elif len(info) == 4:
+        elif i_len == 4:
+            item_info['enumeration_a'] = snarf_numerals(info[0])
             # If info[1] is a string of alphabetic characters, then: issue, month, day, year
             if has_digitsp.match(info[1]) == None:
                 item_info['chronology_j'] = info[1]
@@ -253,7 +252,8 @@ def get_info_from_description(item):
                 item_info['chronology_i'] = snarf_numerals(info[3])
         # If the item has three fields, treat it like it records volume, issue, 
         # year or volume, month, year
-        elif len(info) == 3:
+        elif i_len == 3:
+            item_info['enumeration_a'] = snarf_numerals(info[0])
             # Match volume, issue, year
             if has_digitsp.match(info[1]):
                 item_info['enumeration_b'] = snarf_numerals(info[1])
@@ -263,9 +263,36 @@ def get_info_from_description(item):
             item_info['chronology_i'] = snarf_numerals(info[2])
         # If this is a 2 field description (i.e. a bound volume or annual publication)
         # the second field should be the year(s), so set it to chronology_i.
-        elif len(info) == 2:
-            item_info['chronology_i'] = snarf_numerals(info[1])
-            
+        elif i_len == 2:
+            # If both fields are numbers, then the pattern is either volume, year
+            # or year, volume
+            if has_digitsp.match(info[0]) != None and has_digitsp.match(info[1]) != None:
+                if is_yearp.match(info[0]) != None:
+                    item_info['enumeration_a'] = snarf_numerals(info[1])
+                    item_info['chronology_i'] = snarf_numerals(info[0])
+                else:
+                    item_info['enumeration_a'] = snarf_numerals(info[0])
+                    item_info['chronology_i'] = snarf_numerals(info[1])
+            # If the first field has digits and the second doesn't, the pattern 
+            # is probably year, months or volume months
+            elif has_digitsp.match(info[0]) != None and has_digitsp.match(info[1]) == None:
+                if is_yearp.match(info[0]):
+                    item_info['chronology_i'] = snarf_numerals(info[0])
+                else:
+                    item_info['enumeration_a'] = snarf_numerals(info[0])
+                    
+                item_info['chronology_j'] = info[1]
+            # If the first field doesn't have digits and the second does, the 
+            # the pattern is probably months, year or maybe months volume
+            elif has_digitsp.match(info[0]) == None and has_digitsp.match(info[1]) != None:
+                # If it looks like a year, assign it to chronology_i
+                if is_yearp.match(info[1]):
+                    item_info['chronology_i'] = snarf_numerals(info[1])
+                # Otherwise, assign it to enumeration_a
+                else:
+                    item_info['enumeration_a'] = snarf_numerals(info[1])
+                    
+                item_info['chronology_j'] = info[0]            
         # Make sure we convert the description field's representation of months,
         # Jan, Win, etc. to the appropriate digital representation: 01, 24, etc.
         # Splitting accounts for things formatted like Jan-Feb and Jan/Feb which
@@ -285,7 +312,14 @@ def get_info_from_description(item):
             else:
                 item_info['chronology_j'] = mo_split[0]
 
-
+    # Make sure none of the values in item_info are a free-floating slash and
+    # that no field begins or ends with a slash. If any of these conditions 
+    # are true, mark the item as an error.
+    for key in item_info:
+        if item_info[key] == '/'or len(item_info[key]) > 0 and(item_info[key][0] == '/' or item_info[key][-1] == '/'):
+            handle_record_error(item, item_info)
+            break
+        
     return item_info            
 
             
@@ -304,7 +338,7 @@ def snarf_numerals(string):
     """
     # This pattern matches hyphens and slashes and is used to recognize and edit
     # date and issue ranges like 1995-1999 or 12/13.
-    rp = re.compile(r'[-/]')
+    rp = re.compile(r'[-/&]')
     
     numerals = rp.sub('/', ''.join([x 
                                     for x 
@@ -388,7 +422,6 @@ def get_info_from_csv(input_file):
             info = line.split(',')
             item_info[holdings_id].append(dict(zip(keys, info)))
             
-           
     return item_info
     
 
@@ -423,4 +456,37 @@ def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
-    r = requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
+    requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
+
+    
+"""
+    # If the record doesn't begin with a volume/issue number
+elif has_digitsp.match(info[0]) == None:
+        is_month = False
+        test_split = rp.split(info[0])
+        for key in date_patterns:
+            if key.match(test_split[0]):
+                is_month = True
+                break
+        else:                
+            item_info = handle_record_error(item, item_info)
+    # If the record has already been identified as an error, do nothing and let
+    # item_info be returned as it is.
+    elif 'error' in item_info:
+        pass"""
+        
+"""
+        # If we've made it here, the first index should be the top level of 
+        # enumeration, unless its been identified as a month or season. If it
+        # is a numeric value, get the volume number.
+        if has_digitsp.match(info[0]) != None:
+            item_info['enumeration_a'] = snarf_numerals(info[0])
+        # If the first index doesn't include a number, check to see if it's been
+        # identified as a month or season. If so, let it fall through to the 
+        # next step.
+        elif is_month == True:
+            pass
+        # If we don't match one of the two above conditions, then we probably
+        # can't handle it properly. Mark it as an error.
+        else:
+            item_info = handle_record_error(item, item_info)"""
