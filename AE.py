@@ -233,8 +233,8 @@ def get_info_from_description(item):
             # i.e. ['no52', 'Win', '2013', '-', '2014']
             elif has_digitsp.match(info[1]) == None and rp.match(info[3]) != None:
                 print("Match!")
-                item_info['chronology_j'] == info[1]
-                item_info['chronology_i'] == snarf_numerals('/'.join([info[2], info[4]]))
+                item_info['chronology_j'] = info[1]
+                item_info['chronology_i'] = snarf_numerals('/'.join([info[2], info[4]]))
             else:
                 handle_record_error(item, item_info)
                          
