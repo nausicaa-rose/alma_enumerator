@@ -21,7 +21,7 @@ process correctly. Some examples:
 * 2016:no.35(2016:Aug. 27)
 * v 51 Nov.-Dec.1997
 * no.51 12 Dec 2015
-* v. 110 no. 9 (September-special issue)
-* v 128 no. 3 (Supplement - Forty Years On)
-* v 128 no. 3 (Supplement - Forty-Year Index)
+* v.164 no.5 Dec/Jan 2015 - Dec/Jan 16
+* v 132 Dec 1915 May 1916
+
 
