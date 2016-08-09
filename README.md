@@ -20,7 +20,6 @@ process correctly. Some examples:
 * 2016:no.35(2016:Aug. 27)
 * v 51 Nov.-Dec.1997
 * no.51 12 Dec 2015
-* no.52 Win 2013 - 2014
 * v. 110 no. 9 (September-special issue)
 * v 128 no. 3 (Supplement - Forty Years On)
 * v 128 no. 3 (Supplement - Forty-Year Index)
