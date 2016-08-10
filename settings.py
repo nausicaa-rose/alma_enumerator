@@ -1,9 +1,5 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Aug  1 09:21:30 2016
-
-@author: wesley.teal
-"""
 
 # Configuration variables
 #-------------------------
