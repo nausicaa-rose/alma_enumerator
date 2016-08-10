@@ -127,6 +127,15 @@ def get_info_from_description(item):
     # assumes it won't be handling records from before the 19th century.
     is_yearp = re.compile(r'(18|19|20)\d\d')
     
+    # Used to filter out Alma-generated descriptions. Since they already
+    # have enumeration/chronology and have a funky format, we can ignore 
+    # them for now.
+    alma_generatedp = re.compile(r'.*:.*\(.*:.*\)')
+    
+    
+    if alma_generatedp.match(item):
+        item_info = handle_record_error(item, item_info)
+    
     to_remove = []
     # Check each field in info
     for i in info:      
@@ -176,6 +185,10 @@ def get_info_from_description(item):
     # error and return.
     if i_len < 1 or i_len > 7:
         item_info = handle_record_error(item, item_info)
+    # If the record has already been identified as an error, do nothing and let
+    # item_info be returned as it is.
+    elif 'error' in item_info:
+        pass
     else:       
         # Set the defaults for all the fields, so that in case there's nothing
         # to put in them, our CSV columns don't get messed up.
@@ -470,36 +483,3 @@ def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
     
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
     requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
-
-    
-"""
-    # If the record doesn't begin with a volume/issue number
-elif has_digitsp.match(info[0]) == None:
-        is_month = False
-        test_split = rp.split(info[0])
-        for key in date_patterns:
-            if key.match(test_split[0]):
-                is_month = True
-                break
-        else:                
-            item_info = handle_record_error(item, item_info)
-    # If the record has already been identified as an error, do nothing and let
-    # item_info be returned as it is.
-    elif 'error' in item_info:
-        pass"""
-        
-"""
-        # If we've made it here, the first index should be the top level of 
-        # enumeration, unless its been identified as a month or season. If it
-        # is a numeric value, get the volume number.
-        if has_digitsp.match(info[0]) != None:
-            item_info['enumeration_a'] = snarf_numerals(info[0])
-        # If the first index doesn't include a number, check to see if it's been
-        # identified as a month or season. If so, let it fall through to the 
-        # next step.
-        elif is_month == True:
-            pass
-        # If we don't match one of the two above conditions, then we probably
-        # can't handle it properly. Mark it as an error.
-        else:
-            item_info = handle_record_error(item, item_info)"""
