@@ -116,8 +116,8 @@ def get_info_from_description(item):
     # date and issue ranges like 1995-1999, 12/13, or 5&6.
     rp = re.compile(r'[-/&]')
     
-    # This pattern matches a field that is either a single hyphen or slash.
-    r_exp = re.compile(r'^[-/]$')
+    # This pattern matches a field that is a single hyphen, slash, or ampersand.
+    r_exp = re.compile(r'^[-/&]$')
     
     # This pattern is used to catch strings like 2011-Win or 2011/Win.
     year_mop = re.compile(r'(\d+)(-|/)([a-zA-Z]+)')
