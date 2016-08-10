@@ -174,7 +174,7 @@ def get_info_from_description(item):
     
     # If the record has less than two or more than 7 fields, mark it as an 
     # error and return.
-    if i_len < 2 or i_len > 7:
+    if i_len < 1 or i_len > 7:
         item_info = handle_record_error(item, item_info)
     else:       
         # Set the defaults for all the fields, so that in case there's nothing
@@ -292,7 +292,20 @@ def get_info_from_description(item):
                 else:
                     item_info['enumeration_a'] = snarf_numerals(info[1])
                     
-                item_info['chronology_j'] = info[0]            
+                item_info['chronology_j'] = info[0]
+        # Handle single field descriptions. These should be either volume or year(s).
+        elif i_len == 1:
+            if has_digitsp.match(info[0]):
+                # Check to see if it looks like it's a year.
+                if is_yearp.match(info[0]):
+                    item_info['chronology_i'] = snarf_numerals(info[0])
+                # If it doesn't look like a year, assume it's a volume number.
+                else:
+                    item_info['enumeration_a'] = snarf_numerals(info[0])
+            # If the field isn't a string of numerals, something's probably
+            # gone wrong. Mark it as an error.
+            else:
+                handle_record_error(item, item_info)
         # Make sure we convert the description field's representation of months,
         # Jan, Win, etc. to the appropriate digital representation: 01, 24, etc.
         # Splitting accounts for things formatted like Jan-Feb and Jan/Feb which
