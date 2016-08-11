@@ -14,6 +14,10 @@ def fetch(mms_id, output_file, error_file, api_key, base_url):
     # Get holdings id(s)
     holdings = get_holdings(base_url, mms_id, api_key)
     
+    # Make sure the output file is empty.
+    with open(output_file, 'w', encoding='utf-8') as fh:
+        fh.truncate()
+    
     # For each holdings ID, write the ID to the output file, get the information
     # for all of the holdings' items, write the field headers to the output file,
     # then write the item information to the output file and write errors to the 
