@@ -18,19 +18,24 @@ chronology fields.
 
 ## Usage
 First make sure your settings are correct in `settings.py`, including the API
-key and the MMS ID of the title you wish to update. 
+key and the MMS ID of the title you wish to update. If you don't have an API
+key, you'll need to get one from the [Ex Libris Developer Network](https://developers.exlibrisgroup.com/).
 
 Alma Enumerator can be used on the command line. To get enumeration and 
 chronology data out of item description fields, run `ae_fetch` or `ae fetch`.
 To update items' enumeration and chronology fields, run `ae_update` or 
 `ae update`.
 
-ae_fetch saves the information it gets to a CSV file. It is always a good idea
+`ae_fetch` saves the information it gets to a CSV file. It is always a good idea
 to check `ae_fetch`'s output to make sure the data it has extracted from the item
 descriptions is correct. The CSV file can be loaded into a spreadsheet 
 application for easier viewing. If you do load it into a spreadsheet app, it's 
 a good idea to have the program treat each column as plain text rather than
 numerical data.
+
+Additionally, whenever `ae_fetch` recognizes a pattern doesn't parse correctly,
+it records the error in an error file and `ae_update` won't update the item
+record in Alma. This way you can edit these records yourself.
 
 Once everything checks out in the CSV, you can run `ae_update` to update the 
 enumeration and chronology information for each item under the current title.
@@ -44,8 +49,8 @@ updating settings.py each time you make change `mms_id`, you can.
 
     ae_fetch [(-m | --mms-id) <mms>] [(-o | --output-file) <of>] [(-e | --error-file) <ef>] [(-a | --api-key) <api>]
 
-So you could specify an mms_id by typing `ae_fetch -m 943120879403590463` or
-`ae_fetch --mms-id 943120879403590463` and ae_fetch would use the MMS ID 
+So you could specify an mms_id by typing `ae_fetch -m 999999999999999999` or
+`ae_fetch --mms-id 999999999999999999` and `ae_fetch` would use the MMS ID 
 provided while using settings.py for the output and error files and the API 
 key.
 
