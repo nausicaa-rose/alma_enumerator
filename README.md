@@ -21,7 +21,9 @@ First make sure your settings are correct in `settings.py`, including the API
 key and the MMS ID of the title you wish to update. If you don't have an API
 key, you'll need to get one from the [Ex Libris Developer Network](https://developers.exlibrisgroup.com/).
 
-Alma Enumerator can be used on the command line. To get enumeration and 
+To use ae's graphical interface, run `ae_gui`.
+
+Alma Enumerator can also be used on the command line. To get enumeration and 
 chronology data out of item description fields, run `ae_fetch` or `ae fetch`.
 To update items' enumeration and chronology fields, run `ae_update` or 
 `ae update`.
@@ -70,9 +72,6 @@ then run `ae_fetch` and `ae_update`.
 ![Example of running ae_fetch in Pycharm](/img/pycharm_run_example.png)
 
 ## Known issues
-ae_gui is currently unusable. It's currently just a mock up that has no
-functionality. That should change soon.
-
 Certain patterns pass through the parser without raising an error, but do not 
 process correctly. Some examples:
 
@@ -81,5 +80,7 @@ process correctly. Some examples:
   '12/01/12/01', when in reality it's should probably be '12/01')
 * v 132 Dec 1915 May 1916 (Dec is treated like the entry for `enumeration_b` and 
   1915 ends up in `chronology_k`)
+* v 19 07-08 (07-08 is treated like `chronology_i` instead of `chronology_j`)
+* v 63 #1 P.1 JAN 1990 (P.1 is treated like `chronology_k` instead of `enumeration_c`)
 
 
