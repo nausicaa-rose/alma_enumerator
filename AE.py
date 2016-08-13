@@ -404,6 +404,27 @@ def output_to_csv(output_file, error_file, item_info, delimeter=','):
             fh.write('{}\n'.format(delimeter.join(item.values())))
             
             
+def fetch(mms_id, output_file, error_file, api_key, base_url):    
+    # Get holdings id(s)
+    holdings = get_holdings(base_url, mms_id, api_key)
+    
+    # Make sure the output file is empty.
+    with open(output_file, 'w', encoding='utf-8') as fh:
+        fh.truncate()
+    
+    # For each holdings ID, write the ID to the output file, get the information
+    # for all of the holdings' items, write the field headers to the output file,
+    # then write the item information to the output file and write errors to the 
+    # error file.
+    for h in holdings:
+        with open(output_file, 'a', encoding='utf-8') as fh:
+            fh.write('{}\n'.format(h))
+    
+        item_info = get_item_info(base_url, mms_id, holdings)
+        write_header_to_csv(output_file, item_info)
+        output_to_csv(output_file, error_file, item_info)
+            
+            
   ##################################           
  # Functions for updating records #
 ##################################
@@ -483,3 +504,13 @@ def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
     
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
     requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
+
+    
+def update(mms_id, input_file, api_key, base_url):
+    items_to_update = get_info_from_csv(input_file)
+
+    for holdings in items_to_update:
+        for item in items_to_update[holdings]:
+            xml = get_item_xml(base_url, mms_id, holdings, item['id'], api_key)
+            updated_xml = update_item_xml(xml, item)
+            update_item(base_url, mms_id, holdings, item['id'], api_key, updated_xml)
