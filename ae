@@ -9,8 +9,8 @@ Usage:
 """
 from settings import api_key, mms_id, output_file, error_file, base_url, input_file
 from docopt import docopt
-from ae_fetch import fetch
-from ae_update import update
+from AE import fetch, update
+from subprocess import call
 
 if __name__ == '__main__':
     args = docopt(__doc__)
@@ -37,5 +37,5 @@ if __name__ == '__main__':
         update(mms_id, input_file, api_key, base_url)
         
     if args['gui']:
-        pass
+        call(['ae_gui'])
         
