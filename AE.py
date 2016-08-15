@@ -277,15 +277,21 @@ def get_info_from_description(item):
         # If this is a 2 field description (i.e. a bound volume or annual publication)
         # the second field should be the year(s), so set it to chronology_i.
         elif i_len == 2:
-            # If both fields are numbers, then the pattern is either volume, year
-            # or year, volume
+            # If both fields are numbers, then the pattern is either volume/year,
+            # or year/volume, or volume/issue(s)
             if has_digitsp.match(info[0]) != None and has_digitsp.match(info[1]) != None:
+                # If the first number looks like a year, assume year/volume
                 if is_yearp.match(info[0]) != None:
                     item_info['enumeration_a'] = snarf_numerals(info[1])
                     item_info['chronology_i'] = snarf_numerals(info[0])
-                else:
+                # If the second number looks like a year, assume volume/year
+                elif is_yearp.match(info[1]):
                     item_info['enumeration_a'] = snarf_numerals(info[0])
                     item_info['chronology_i'] = snarf_numerals(info[1])
+                # Otherwise, assume volume/issue
+                else:
+                    item_info['enumeration_a'] = snarf_numerals(info[0])
+                    item_info['enumeration_b'] = snarf_numerals(info[1])
             # If the first field has digits and the second doesn't, the pattern 
             # is probably year, months or volume months
             elif has_digitsp.match(info[0]) != None and has_digitsp.match(info[1]) == None:
