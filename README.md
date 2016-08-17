@@ -82,5 +82,6 @@ process correctly. Some examples:
   1915 ends up in `chronology_k`)
 * v 19 07-08 (07-08 is treated like `chronology_i` instead of `chronology_j`)
 * v 63 #1 P.1 JAN 1990 (P.1 is treated like `chronology_k` instead of `enumeration_c`)
+* v 4.no.4 2011 (volume and issue get merged into `enumeration_a` 44 because of lack of spaces)
 
 
