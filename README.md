@@ -60,12 +60,9 @@ key.
 
     ae_update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [(-a | --api-key) <api>]
                                                       
-A graphical version is in the works (`ae_gui`), but is not fuctional at the 
-moment. 
-
-If you're not comfortable working on the command line, the best option right 
-now is to use an IDE like Spyder or PyCharm that will allow you to open and 
-then run `ae_fetch` and `ae_update`.
+If you're not comfortable working on the command line, run `ae_gui` or use 
+an IDE like Spyder or PyCharm that will allow you to open and then run 
+`ae_fetch` and `ae_update`.
 
 ![Example of running ae_update in Spyder](/img/spyder_run_example.png)
 
