@@ -16,7 +16,7 @@ def get_holdings(base_url, mms_id, api_key):
     holdings_list = []
     query = 'bibs/{}/holdings?apikey={}'
     r = requests.get(''.join([base_url, query.format(mms_id, api_key)]))
-    soup = BeautifulSoup(r.text, 'lxml')
+    soup = BeautifulSoup(r.text, 'xml')
     holdings = soup.find_all('holding_id')
     for id in holdings:
         holdings_list.append(id.text)
@@ -24,7 +24,7 @@ def get_holdings(base_url, mms_id, api_key):
     return holdings_list
 
 
-def get_item_info(base_url, mms_id, holdings):
+def get_item_info(base_url, mms_id, holdings_id):
     """
     Get the enumeration, chronology, and item id for each item for each holdings
     record.
@@ -36,37 +36,35 @@ def get_item_info(base_url, mms_id, holdings):
     descriptions = []
     item_info = []
 
-    for holdings_id in holdings:
-        r = requests.get(''.join([base_url, query.format(mms_id, holdings_id, limit, offset, api_key)]))
-        soup = BeautifulSoup(r.text, 'lxml')
-        
-        current_response = soup.find_all('item_data')
-        items = current_response
-        
-        # Iterate through the entire list of items
-        while True:
-            if len(current_response) == limit:
-                offset += limit
-                r = requests.get(''.join([base_url, query.format(mms_id, holdings_id, limit, offset, api_key)]))
-                soup = BeautifulSoup(r.text, 'lxml')
-                current_response = soup.find_all('item_data')
-                items += current_response
-            else:
-                break
-                
+    r = requests.get(''.join([base_url, query.format(mms_id, holdings_id, limit, offset, api_key)]))
+    soup = BeautifulSoup(r.text, 'xml')
+    
+    current_response = soup.find_all('item_data')
+    items = current_response
+    
+    # Iterate through the entire list of items
+    while True:
+        if len(current_response) == limit:
+            offset += limit
+            r = requests.get(''.join([base_url, query.format(mms_id, holdings_id, limit, offset, api_key)]))
+            soup = BeautifulSoup(r.text, 'xml')
+            current_response = soup.find_all('item_data')
+            items += current_response
+        else:
+            break
 
-        for item in items:
-            item_ids.append(item.find('pid').text)
-            descriptions.append(item.find('description').text)
-        
-        # Call get_info_from_description() function to parse the description
-        # and return a dictionary with
-        for d in descriptions:
-            item_info.append(get_info_from_description(d)) 
-        
-        # Add the item ID to each item
-        for i in range(len(item_ids)):
-            item_info[i]['id'] = item_ids[i]
+    for item in items:
+        item_ids.append(item.find('pid').text)
+        descriptions.append(item.find('description').text)
+    
+    # Call get_info_from_description() function to parse the description
+    # and return a dictionary with
+    for d in descriptions:
+        item_info.append(get_info_from_description(d)) 
+    
+    # Add the item ID to each item
+    for i in range(len(item_ids)):
+        item_info[i]['id'] = item_ids[i]
                    
     return item_info
 
@@ -179,8 +177,7 @@ def get_info_from_description(item):
             tail = info[(index + 1):]
             body = list(year_mop.match(i).groups())
             info = head + body + tail
-    
-            
+              
     # Now that we're done fiddling with fields, get the length of info
     i_len = len(info)
     
@@ -429,7 +426,7 @@ def fetch(mms_id, output_file, error_file, api_key, base_url):
         with open(output_file, 'a', encoding='utf-8') as fh:
             fh.write('{}\n'.format(h))
     
-        item_info = get_item_info(base_url, mms_id, holdings)
+        item_info = get_item_info(base_url, mms_id, h)
         write_header_to_csv(output_file, item_info)
         output_to_csv(output_file, error_file, item_info)
             
