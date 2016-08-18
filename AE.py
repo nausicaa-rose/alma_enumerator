@@ -147,7 +147,7 @@ def get_info_from_description(item):
         i = bad_charsp.sub('', i)
                
         # Find fields that include only alphabetic characters
-        if has_digitsp.match(i) == None and r_exp.match(i) == None:
+        if not has_digitsp.match(i) and not r_exp.match(i):
             is_ok = False
             for key in date_patterns:
                 # If the field is in date_patterns, it's an indicator of month
@@ -173,7 +173,7 @@ def get_info_from_description(item):
     # To deal with this we split the field to look like ('2005', '-', 'June'),
     # drop the original field, and put the three new fields in its place.
     for i in info:
-        if year_mop.match(i) != None:
+        if year_mop.match(i):
             index = info.index(i)
             head = info[0:index]
             tail = info[(index + 1):]
@@ -218,7 +218,7 @@ def get_info_from_description(item):
        # ['no.42', 'Win', '2009', '-', 'Win', '2010']
         elif i_len == 6:
             item_info['enumeration_a'] = snarf_numerals(info[0])
-            if has_digitsp.match(info[1]) == None and has_digitsp.match(info[4]) == None and rp.match(info[3]) != None:              
+            if not has_digitsp.match(info[1]) and not has_digitsp.match(info[4]) and rp.match(info[3]):              
                 if info[2] == info[5]:
                     item_info['chronology_i'] = snarf_numerals(info[5])
                 else:
@@ -234,19 +234,19 @@ def get_info_from_description(item):
             item_info['enumeration_b'] = snarf_numerals(info[1])
             # This matches the date pattern Day Month Year, i.e. 
             # ['v.43 'no.2', '4', 'Mar', '2009']
-            if has_digitsp.match(info[2]) != None and rp.match(info[3]) == None:
+            if has_digitsp.match(info[2]) and not rp.match(info[3]):
                 item_info['chronology_k'] = snarf_numerals(info[2])
                 item_info['chronology_j'] = info[3]
                 item_info['chronology_i'] = snarf_numerals(info[4])
             # This matches the date pattern Month Day Year, i.e. 
             # ['v.43 'no.2', 'Mar', '4', '2009']
-            elif has_digitsp.match(info[1]) != None:
+            elif has_digitsp.match(info[1]):
                 item_info['chronology_j'] = info[2]
                 item_info['chronology_k'] = snarf_numerals(info[3])
                 item_info['chronology_i'] = snarf_numerals(info[4])
             # This matches the date pattern Season Year - Year
             # i.e. ['no52', 'Win', '2013', '-', '2014']
-            elif has_digitsp.match(info[1]) == None and rp.match(info[3]) != None:
+            elif not has_digitsp.match(info[1]) and rp.match(info[3]):
                 item_info['chronology_j'] = info[1]
                 item_info['chronology_i'] = snarf_numerals('/'.join([info[2], info[4]]))
             else:
@@ -257,7 +257,7 @@ def get_info_from_description(item):
         elif i_len == 4:
             item_info['enumeration_a'] = snarf_numerals(info[0])
             # If info[1] is a string of alphabetic characters, then: issue, month, day, year
-            if has_digitsp.match(info[1]) == None:
+            if not has_digitsp.match(info[1]):
                 item_info['chronology_j'] = info[1]
                 item_info['chronology_k'] = snarf_numerals(info[2])
                 item_info['chronology_i'] = snarf_numerals(info[3])
@@ -282,9 +282,9 @@ def get_info_from_description(item):
         elif i_len == 2:
             # If both fields are numbers, then the pattern is either volume/year,
             # or year/volume, or volume/issue(s)
-            if has_digitsp.match(info[0]) != None and has_digitsp.match(info[1]) != None:
+            if has_digitsp.match(info[0]) and has_digitsp.match(info[1]):
                 # If the first number looks like a year, assume year/volume
-                if is_yearp.match(info[0]) != None:
+                if is_yearp.match(info[0]):
                     item_info['enumeration_a'] = snarf_numerals(info[1])
                     item_info['chronology_i'] = snarf_numerals(info[0])
                 # If the second number looks like a year, assume volume/year
@@ -297,7 +297,7 @@ def get_info_from_description(item):
                     item_info['enumeration_b'] = snarf_numerals(info[1])
             # If the first field has digits and the second doesn't, the pattern 
             # is probably year, months or volume months
-            elif has_digitsp.match(info[0]) != None and has_digitsp.match(info[1]) == None:
+            elif has_digitsp.match(info[0]) and not has_digitsp.match(info[1]):
                 if is_yearp.match(info[0]):
                     item_info['chronology_i'] = snarf_numerals(info[0])
                 else:
@@ -306,7 +306,7 @@ def get_info_from_description(item):
                 item_info['chronology_j'] = info[1]
             # If the first field doesn't have digits and the second does, the 
             # the pattern is probably months, year or maybe months volume
-            elif has_digitsp.match(info[0]) == None and has_digitsp.match(info[1]) != None:
+            elif not has_digitsp.match(info[0]) and has_digitsp.match(info[1]):
                 # If it looks like a year, assign it to chronology_i
                 if is_yearp.match(info[1]):
                     item_info['chronology_i'] = snarf_numerals(info[1])
