@@ -385,7 +385,10 @@ def write_header_to_csv(output_file, item_info, delimeter=','):
     Write out the field headers: id, enumeration_a, etc, to the output file.
     """
     with open(output_file, 'a', encoding='utf-8') as fh:
-        fh.write('{}\n'.format(delimeter.join(item_info[0].keys())))
+        try:
+            fh.write('{}\n'.format(delimeter.join(item_info[0].keys())))
+        except IndexError:
+            pass
         
     
 def output_to_csv(output_file, error_file, item_info, delimeter=','):
