@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from settings import api_key
@@ -78,8 +79,9 @@ def get_info_from_description(item):
     For those descriptions it can parse, it returns a dictionary with each field
     converted to a format compatible with Alma's enumeration and chronology fields.
     """
+    splitter_p = re.compile(r'( |\.)')
     item_info = {}
-    info = item.split(' ')
+    info = splitter_p.split(item)
     
     # This dictonary of patterns is used convert month and season words to numerals.
     # It's also used to identify descriptions with words that are not
@@ -177,172 +179,90 @@ def get_info_from_description(item):
             tail = info[(index + 1):]
             body = list(year_mop.match(i).groups())
             info = head + body + tail
+            
+            
+    # Set the defaults for all the fields, so that in case there's nothing
+    # to put in them, our CSV columns don't get messed up.
+    item_info['enumeration_a'] = ''
+    item_info['enumeration_b'] = ''
+    item_info['chronology_i'] = ''
+    item_info['chronology_j'] = ''
+    item_info['chronology_k'] = ''
               
-    # Now that we're done fiddling with fields, get the length of info
-    i_len = len(info)
+    mo_season = []
+    years = []
+    delete_me = []
+    has_chron_k = False
+    for i in info:
+        if r_exp.match(i):
+            delete_me.append(i)
+        elif not has_digitsp.match(i):
+            mo_season.append(i)
+            delete_me.append(i)
+            look_ahead = info[info.index(i) + 1]
+            if has_digitsp.match(look_ahead) and not is_yearp.match(look_ahead):
+                has_chron_k = True
+        else:
+            info[info.index(i)] = snarf_numerals(i)
+            i = snarf_numerals(i)
+
+            if is_yearp.match(i):
+                years.append(i)
+                delete_me.append(i)
+                
+    for i in delete_me:
+        info.remove(i)
+                
+    years = remove_duplicates(years)
+    mo_season = remove_duplicates(mo_season)
+        
+    if len(years) == 1:
+        item_info['chronology_i'] = years[0]
+    elif len(years) > 1:
+        item_info['chronology_i'] = '/'.join(years)
+        
+    if len(mo_season) == 1:
+        item_info['chronology_j'] = mo_season[0]
+    elif len(mo_season) > 1: 
+        item_info['chronology_j'] = '/'.join(mo_season)
+        
+    i_len = len(info)   
+        
+                
+    if i_len > 0:
+        item_info['enumeration_a'] = info[0]
+
+        if i_len > 1:
+            if has_chron_k and i_len == 2:
+                item_info['chronology_k'] = info[1]
+            else:
+                item_info['enumeration_b'] = info[1]
+
+            if i_len == 3:
+                item_info['chronology_k'] = info[2]
+
+            if i_len > 3:
+                item_info['chronology_k'] = '/'.join(info[2:])
+        
+        
+    # Make sure we convert the description field's representation of months,
+    # Jan, Win, etc. to the appropriate digital representation: 01, 24, etc.
+    # Splitting accounts for things formatted like Jan-Feb and Jan/Feb which
+    # will be converted to 01/02.
+    if item_info['chronology_j'] != '':
+        mo_split = rp.split(item_info['chronology_j'])
+        for i in range(len(mo_split)):
+            for key in date_patterns:
+                if key.match(mo_split[i]):
+                    mo_split[i] = date_patterns[key]
+                    break
     
-    # If the record has less than two or more than 7 fields, mark it as an 
-    # error and return.
-    if i_len < 1 or i_len > 7:
-        item_info = handle_record_error(item, item_info)
-    # If the record has already been identified as an error, do nothing and let
-    # item_info be returned as it is.
-    elif 'error' in item_info:
-        pass
-    else:       
-        # Set the defaults for all the fields, so that in case there's nothing
-        # to put in them, our CSV columns don't get messed up.
-        item_info['enumeration_a'] = ''
-        item_info['enumeration_b'] = ''
-        item_info['chronology_i'] = ''
-        item_info['chronology_j'] = ''
-        item_info['chronology_k'] = ''
-        
-        # ['v.65', 'no.3', 'May', '2012', '-', 'Jun', '2012']
-        if i_len == 7:
-            item_info['enumeration_a'] = snarf_numerals(info[0])
-            if has_digitsp.match(info[2]) == None and has_digitsp.match(info[5]) == None and rp.match(info[4]) != None:
-                item_info['enumeration_b'] = snarf_numerals(info[1])
-                
-                if info[3] == info[6]:
-                    item_info['chronology_i'] = snarf_numerals(info[6])
-                else:
-                    item_info['chronology_i'] = '/'.join([snarf_numerals(info[3]), snarf_numerals(info[6])])
-                
-                item_info['chronology_j'] = '/'.join([info[2], info[5]])
-            else:
-                item_info = handle_record_error(item, item_info)
-       # ['no.42', 'Win', '2009', '-', 'Win', '2010']
-        elif i_len == 6:
-            item_info['enumeration_a'] = snarf_numerals(info[0])
-            if not has_digitsp.match(info[1]) and not has_digitsp.match(info[4]) and rp.match(info[3]):              
-                if info[2] == info[5]:
-                    item_info['chronology_i'] = snarf_numerals(info[5])
-                else:
-                    item_info['chronology_i'] = '/'.join([snarf_numerals(info[2]), snarf_numerals(info[5])])
-                
-                item_info['chronology_j'] = '/'.join([info[1], info[4]])
-            else:
-                item_info = handle_record_error(item, item_info)
-        # If item has five fields, it will be treated as if it records volume, issue, day, month, year
-        # ['v.43 'no.2', '4', 'Mar', '2009'] or ['v.43 'no.2', 'Mar', '4', '2009']
-        elif i_len == 5:
-            item_info['enumeration_a'] = snarf_numerals(info[0])
-            item_info['enumeration_b'] = snarf_numerals(info[1])
-            # This matches the date pattern Day Month Year, i.e. 
-            # ['v.43 'no.2', '4', 'Mar', '2009']
-            if has_digitsp.match(info[2]) and not rp.match(info[3]):
-                item_info['chronology_k'] = snarf_numerals(info[2])
-                item_info['chronology_j'] = info[3]
-                item_info['chronology_i'] = snarf_numerals(info[4])
-            # This matches the date pattern Month Day Year, i.e. 
-            # ['v.43 'no.2', 'Mar', '4', '2009']
-            elif has_digitsp.match(info[1]):
-                item_info['chronology_j'] = info[2]
-                item_info['chronology_k'] = snarf_numerals(info[3])
-                item_info['chronology_i'] = snarf_numerals(info[4])
-            # This matches the date pattern Season Year - Year
-            # i.e. ['no52', 'Win', '2013', '-', '2014']
-            elif not has_digitsp.match(info[1]) and rp.match(info[3]):
-                item_info['chronology_j'] = info[1]
-                item_info['chronology_i'] = snarf_numerals('/'.join([info[2], info[4]]))
-            else:
-                handle_record_error(item, item_info)
-                         
-        # If the item does not record days, then treat it like it records 
-        # issue, month, day, year or volume, issue, month, year
-        elif i_len == 4:
-            item_info['enumeration_a'] = snarf_numerals(info[0])
-            # If info[1] is a string of alphabetic characters, then: issue, month, day, year
-            if not has_digitsp.match(info[1]):
-                item_info['chronology_j'] = info[1]
-                item_info['chronology_k'] = snarf_numerals(info[2])
-                item_info['chronology_i'] = snarf_numerals(info[3])
-            # volume, issue, month, year
-            else:
-                item_info['enumeration_b'] = snarf_numerals(info[1])
-                item_info['chronology_j'] = info[2]
-                item_info['chronology_i'] = snarf_numerals(info[3])
-        # If the item has three fields, treat it like it records volume, issue, 
-        # year or volume, month, year
-        elif i_len == 3:
-            item_info['enumeration_a'] = snarf_numerals(info[0])
-            # Match volume, issue, year
-            if has_digitsp.match(info[1]):
-                item_info['enumeration_b'] = snarf_numerals(info[1])
-            # Fall back to volume, month, year
-            else:
-                item_info['chronology_j'] = info[1]
-            item_info['chronology_i'] = snarf_numerals(info[2])
-        # If this is a 2 field description (i.e. a bound volume or annual publication)
-        # the second field should be the year(s), so set it to chronology_i.
-        elif i_len == 2:
-            # If both fields are numbers, then the pattern is either volume/year,
-            # or year/volume, or volume/issue(s)
-            if has_digitsp.match(info[0]) and has_digitsp.match(info[1]):
-                # If the first number looks like a year, assume year/volume
-                if is_yearp.match(info[0]):
-                    item_info['enumeration_a'] = snarf_numerals(info[1])
-                    item_info['chronology_i'] = snarf_numerals(info[0])
-                # If the second number looks like a year, assume volume/year
-                elif is_yearp.match(info[1]):
-                    item_info['enumeration_a'] = snarf_numerals(info[0])
-                    item_info['chronology_i'] = snarf_numerals(info[1])
-                # Otherwise, assume volume/issue
-                else:
-                    item_info['enumeration_a'] = snarf_numerals(info[0])
-                    item_info['enumeration_b'] = snarf_numerals(info[1])
-            # If the first field has digits and the second doesn't, the pattern 
-            # is probably year, months or volume months
-            elif has_digitsp.match(info[0]) and not has_digitsp.match(info[1]):
-                if is_yearp.match(info[0]):
-                    item_info['chronology_i'] = snarf_numerals(info[0])
-                else:
-                    item_info['enumeration_a'] = snarf_numerals(info[0])
-                    
-                item_info['chronology_j'] = info[1]
-            # If the first field doesn't have digits and the second does, the 
-            # the pattern is probably months, year or maybe months volume
-            elif not has_digitsp.match(info[0]) and has_digitsp.match(info[1]):
-                # If it looks like a year, assign it to chronology_i
-                if is_yearp.match(info[1]):
-                    item_info['chronology_i'] = snarf_numerals(info[1])
-                # Otherwise, assign it to enumeration_a
-                else:
-                    item_info['enumeration_a'] = snarf_numerals(info[1])
-                    
-                item_info['chronology_j'] = info[0]
-        # Handle single field descriptions. These should be either volume or year(s).
-        elif i_len == 1:
-            if has_digitsp.match(info[0]):
-                # Check to see if it looks like it's a year.
-                if is_yearp.match(info[0]):
-                    item_info['chronology_i'] = snarf_numerals(info[0])
-                # If it doesn't look like a year, assume it's a volume number.
-                else:
-                    item_info['enumeration_a'] = snarf_numerals(info[0])
-            # If the field isn't a string of numerals, something's probably
-            # gone wrong. Mark it as an error.
-            else:
-                handle_record_error(item, item_info)
-        # Make sure we convert the description field's representation of months,
-        # Jan, Win, etc. to the appropriate digital representation: 01, 24, etc.
-        # Splitting accounts for things formatted like Jan-Feb and Jan/Feb which
-        # will be converted to 01/02.
-        if item_info['chronology_j'] != '':
-            mo_split = rp.split(item_info['chronology_j'])
-            for i in range(len(mo_split)):
-                for key in date_patterns:
-                    if key.match(mo_split[i]):
-                        mo_split[i] = date_patterns[key]
-                        break
-        
-            # Recombine multiple dates
-            if len(mo_split) > 1:
-                item_info['chronology_j'] = '/'.join(mo_split)
-            # Otherwise, just set chronology_j to the one date
-            else:
-                item_info['chronology_j'] = mo_split[0]
+        # Recombine multiple dates
+        if len(mo_split) > 1:
+            item_info['chronology_j'] = '/'.join(mo_split)
+        # Otherwise, just set chronology_j to the one date
+        else:
+            item_info['chronology_j'] = mo_split[0]
 
     # Make sure none of the values in item_info are a free-floating slash and
     # that no field begins or ends with a slash. If any of these conditions 
@@ -378,6 +298,15 @@ def snarf_numerals(string):
                                     if x.isdigit() or rp.match(x) != None]))
         
     return numerals
+    
+def remove_duplicates(l):
+    check_list = []
+    out_list = [x for x in l if not (x in check_list or check_list.append(x))]
+
+    return out_list
+
+
+
         
         
 def write_header_to_csv(output_file, item_info, delimeter=','):
