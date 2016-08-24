@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""ae_update
+
+Usage:
+    ae_update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [(-a | --api-key) <api>]
+"""
+
+from settings import api_key, mms_id, input_file, base_url
+from AE import update
+from docopt import docopt       
+
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    
+    if args['-m'] or args['--mms-id']:
+        mms_id = args['<mms>']
+
+    if args['-i'] or args['--input-file']:
+        input_file = args['<if>']  
+
+    if args['-a'] or args['--api-key']:
+        api_key = args['<api>']
+
+    update(mms_id, input_file, api_key, base_url)
+    
+    
+
+        
+
