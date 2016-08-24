@@ -193,15 +193,20 @@ def get_info_from_description(item):
     years = []
     delete_me = []
     has_chron_k = False
+    last_index = len(info) - 1
     for i in info:
+        
         if r_exp.match(i):
             delete_me.append(i)
+            
         elif not has_digitsp.match(i):
             mo_season.append(i)
             delete_me.append(i)
-            look_ahead = info[info.index(i) + 1]
-            if has_digitsp.match(look_ahead) and not is_yearp.match(look_ahead):
-                has_chron_k = True
+            if last_index > info.index(i):
+                look_ahead = info[info.index(i) + 1]
+    
+                if has_digitsp.match(look_ahead) and not is_yearp.match(look_ahead):
+                    has_chron_k = True
         else:
             info[info.index(i)] = snarf_numerals(i)
             i = snarf_numerals(i)
@@ -314,7 +319,10 @@ def write_header_to_csv(output_file, item_info, delimeter=','):
     Write out the field headers: id, enumeration_a, etc, to the output file.
     """
     with open(output_file, 'a', encoding='utf-8') as fh:
-        fh.write('{}\n'.format(delimeter.join(item_info[0].keys())))
+        try:
+            fh.write('{}\n'.format(delimeter.join(item_info[0].keys())))
+        except IndexError:
+            pass
         
     
 def output_to_csv(output_file, error_file, item_info, delimeter=','):
