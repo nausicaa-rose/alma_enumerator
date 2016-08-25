@@ -141,10 +141,8 @@ def get_info_from_description(item):
     # month or season words.
     to_remove = []
     bad_ends_begins = ('-', '%', '/')
-    print(info)
     # Check each field in info
     for i in info:
-        print(i)
         # Scrub '.(),:' from text for better matching
         info[info.index(i)] = bad_charsp.sub('', i)
         i = bad_charsp.sub('', i)
@@ -174,7 +172,6 @@ def get_info_from_description(item):
                 to_remove.append(i)
     
     # Remove fields from info that we don't want.
-    print(to_remove)
     for i in to_remove:
         info.remove(i)
     
@@ -205,12 +202,9 @@ def get_info_from_description(item):
     delete_me = []
     has_chron_k = False
     last_index = len(info) - 1
-    for i in info:
-        print(i)
-        
+    for i in info:      
         if r_exp.match(i):
             delete_me.append(i)
-            
         elif not has_digitsp.match(i):
             mo_season.append(i)
             delete_me.append(i)
@@ -231,9 +225,8 @@ def get_info_from_description(item):
         info.remove(i)
                 
     years = remove_duplicates(years)
-    print(mo_season)
     mo_season = remove_duplicates(mo_season)
-    print(mo_season)
+
         
     if len(years) == 1:
         item_info['chronology_i'] = years[0]
@@ -257,11 +250,18 @@ def get_info_from_description(item):
             else:
                 item_info['enumeration_b'] = info[1]
 
-            if i_len == 3:
-                item_info['chronology_k'] = info[2]
-
-            if i_len > 3:
-                item_info['chronology_k'] = '/'.join(info[2:])
+            if i_len >= 3:
+                days_of_month = range(1,31)
+                for i in info[2:]:
+                    if i not in days_of_month:
+                        item_info = handle_record_error(item, item_info)
+                        break
+                    
+                if i_len == 3:
+                    item_info['chronology_k'] = info[2]
+    
+                if i_len > 3:
+                    item_info['chronology_k'] = '/'.join(info[2:])
         
         
     # Make sure we convert the description field's representation of months,
@@ -269,13 +269,18 @@ def get_info_from_description(item):
     # Splitting accounts for things formatted like Jan-Feb and Jan/Feb which
     # will be converted to 01/02.
     if item_info['chronology_j'] != '':
+        delete_list = []
         mo_split = rp.split(item_info['chronology_j'])
-        print(mo_split)
         for i in range(len(mo_split)):
             for key in date_patterns:
                 if key.match(mo_split[i]):
                     mo_split[i] = date_patterns[key]
                     break
+            if not has_digitsp.match(mo_split[i]):
+                delete_list.append(mo_split[i])
+                
+        for i in delete_list:
+            mo_split.remove(i)
     
         # Recombine multiple dates
         if len(mo_split) > 1:
@@ -431,6 +436,8 @@ def get_item_xml(base_url, mms_id, holdings_id, item_id, api_key):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     r = requests.get(''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)]))
     item_xml = r.text
+    print(r.status_code)
+    print(r.text)
     
     return item_xml
     
@@ -458,7 +465,9 @@ def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
-    requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
+    r = requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
+    print(r.status_code)
+    print(r.text)
 
 
     
