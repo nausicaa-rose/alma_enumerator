@@ -101,7 +101,7 @@ def get_info_from_description(item):
                      re.compile(r'(Dec\.?|December)', re.IGNORECASE):    '12',
                      re.compile(r'(Spr\.?|Spring)', re.IGNORECASE):      '21',
                      re.compile(r'(Sum\.?|Summer)', re.IGNORECASE):      '22',
-                     re.compile(r'(Fal\.?|Fall|Autumn)', re.IGNORECASE): '23',
+                     re.compile(r'(Fal\.?|Fall|Autumn|Aut\.?)', re.IGNORECASE): '23',
                      re.compile(r'(Win\.?|Winter)', re.IGNORECASE):      '24',
                      }                
     
@@ -436,8 +436,6 @@ def get_item_xml(base_url, mms_id, holdings_id, item_id, api_key):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     r = requests.get(''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)]))
     item_xml = r.text
-    print(r.status_code)
-    print(r.text)
     
     return item_xml
     
@@ -465,9 +463,8 @@ def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
-    r = requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
-    print(r.status_code)
-    print(r.text)
+    requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
+
 
 
     
