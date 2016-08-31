@@ -168,7 +168,7 @@ def get_info_from_description(item):
             # a descriptive word like 'Abstracts', 'INDEX', etc, or a 
             # volume/number indicator like 'v.', 'no.', etc. If that's the 
             # case, add it to the removal list.
-            if is_ok == False:
+            if not is_ok:
                 to_remove.append(i)
     
     # Remove fields from info that we don't want.
@@ -202,35 +202,61 @@ def get_info_from_description(item):
     delete_me = []
     has_chron_k = False
     last_index = len(info) - 1
-    for i in info:      
+    
+    # Go through each item in the list
+    for i in info:
+        # If it's a hyphen, ampersand, or slash, add it to the deletion list.
         if r_exp.match(i):
             delete_me.append(i)
+        # If it's not a numeric value, add it to the month/season list and
+        # mark it for deletion.
         elif not has_digitsp.match(i):
             mo_season.append(i)
             delete_me.append(i)
+            # Check the item after this one.
             if last_index > info.index(i):
                 look_ahead = info[info.index(i) + 1]
-    
+                
+                # If it looks like a numeric value and not like a year. Mark it
+                # as a chronology_k (day) value.
                 if has_digitsp.match(look_ahead) and not is_yearp.match(look_ahead):
                     has_chron_k = True
+        # If it is a numeric value, sanitize it by running it through 
+        # snarf_numerals()
         else:
             info[info.index(i)] = snarf_numerals(i)
             i = snarf_numerals(i)
 
+            # If it looks like a year, add it to the years list and the deletion
+            # list.
             if is_yearp.match(i):
                 years.append(i)
                 delete_me.append(i)
-                
+    
+    # Delete all the values that we've already identified.
     for i in delete_me:
         info.remove(i)
-                
+    
+    # Remove duplicates from our year and mo_season lists as duplicates usually
+    # show up in circumstances like Win 2015-Win 2016 or June 2015 & July 2015
+    # where they are redundant.            
     years = remove_duplicates(years)
     mo_season = remove_duplicates(mo_season)
+    
+    # Split years values like 1920/2001 and 1950/55. This is important for
+    # values like 1950/55 because they will be corrected to 1950/1955.
+    years = [i for l in years for i in rp.split(l)]
 
-        
+           
     if len(years) == 1:
         item_info['chronology_i'] = years[0]
     elif len(years) > 1:
+        for i in years[1:]:
+            # If we have something like ['1976', '77'], convert it to 
+            # ['1976', '1977']
+            if len(i) == 2:
+                years[years.index(i)] = years[years.index(i) - 1][:2] + i
+
         item_info['chronology_i'] = '/'.join(years)
         
     if len(mo_season) == 1:
@@ -253,7 +279,7 @@ def get_info_from_description(item):
             if i_len >= 3:
                 days_of_month = range(1,31)
                 for i in info[2:]:
-                    if i not in days_of_month:
+                    if int(i) not in days_of_month:
                         item_info = handle_record_error(item, item_info)
                         break
                     
@@ -288,14 +314,6 @@ def get_info_from_description(item):
         # Otherwise, just set chronology_j to the one date
         else:
             item_info['chronology_j'] = mo_split[0]
-
-    # Make sure none of the values in item_info are a free-floating slash and
-    # that no field begins or ends with a slash. If any of these conditions 
-    # are true, mark the item as an error.
-    for key in item_info:
-        if item_info[key] == '/'or len(item_info[key]) > 0 and(item_info[key][0] == '/' or item_info[key][-1] == '/'):
-            handle_record_error(item, item_info)
-            break
         
     return item_info            
 
