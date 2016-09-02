@@ -120,7 +120,7 @@ def get_info_from_description(item):
     r_exp = re.compile(r'^[-/&]$')
     
     # This pattern is used to catch strings like 2011-Win or 2011/Win.
-    year_mop = re.compile(r'(\d+)(-|/)([a-zA-Z]+)')
+    year_mop = re.compile(r'((\d+)(-|/|&)([a-zA-Z]+)|([a-zA-Z]+)(-|/|&)(\d+))')
     
     # This pattern is used to distinguish between years and volume/issue numbers,
     # but it may trip over long continuously numbered issues. The pattern also
@@ -185,9 +185,8 @@ def get_info_from_description(item):
             index = info.index(i)
             head = info[0:index]
             tail = info[(index + 1):]
-            body = list(year_mop.match(i).groups())
-            info = head + body + tail
-            
+            body = [x for x in year_mop.match(i).groups()[1:] if x is not None]
+            info = head + body + tail          
             
     # Set the defaults for all the fields, so that in case there's nothing
     # to put in them, our CSV columns don't get messed up.
@@ -232,6 +231,13 @@ def get_info_from_description(item):
             if is_yearp.match(i):
                 years.append(i)
                 delete_me.append(i)
+            
+            # Only month values should have leading zeros if anything left in this list 
+            # has a leading zero, it's probably something like an abbreviated year that
+            # has been misidentified as not a year (ie 07 for 2007). Treat it as an
+            # error.
+            if has_leading_zero(i):
+                item_info = handle_record_error(item, item_info)
     
     # Delete all the values that we've already identified.
     for i in delete_me:
@@ -246,8 +252,7 @@ def get_info_from_description(item):
     # Split years values like 1920/2001 and 1950/55. This is important for
     # values like 1950/55 because they will be corrected to 1950/1955.
     years = [i for l in years for i in rp.split(l)]
-
-           
+          
     if len(years) == 1:
         item_info['chronology_i'] = years[0]
     elif len(years) > 1:
@@ -265,8 +270,7 @@ def get_info_from_description(item):
         item_info['chronology_j'] = '/'.join(mo_season)
         
     i_len = len(info)   
-        
-                
+                   
     if i_len > 0:
         item_info['enumeration_a'] = info[0]
 
@@ -277,12 +281,11 @@ def get_info_from_description(item):
                 item_info['enumeration_b'] = info[1]
 
             if i_len >= 3:
-                days_of_month = range(1,31)
+                days_of_month = range(1,32)
                 for i in info[2:]:
                     if int(i) not in days_of_month:
                         item_info = handle_record_error(item, item_info)
                         break
-                    
                 if i_len == 3:
                     item_info['chronology_k'] = info[2]
     
@@ -317,6 +320,8 @@ def get_info_from_description(item):
         
     return item_info            
 
+def has_leading_zero(input):
+    return input[0] == '0'
             
 def handle_record_error(item, item_info):
     print('{} appears to be irregular. Please correct by hand.'.format(item))
