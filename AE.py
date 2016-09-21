@@ -79,7 +79,7 @@ def get_info_from_description(item):
     For those descriptions it can parse, it returns a dictionary with each field
     converted to a format compatible with Alma's enumeration and chronology fields.
     """
-    splitter_p = re.compile(r'( |\.)')
+    splitter_p = re.compile(r'( |\.|,)')
     item_info = {}
     info = splitter_p.split(item)
     
@@ -154,27 +154,11 @@ def get_info_from_description(item):
         if i.endswith(bad_ends_begins):
             info[info.index(i)] = i[:-1]
             i = i[:-1]       
-        # Find fields that include only alphabetic characters
-        if not has_digitsp.match(i) and not r_exp.match(i):
-            is_ok = False
-            for key in date_patterns:
-                # If the field is in date_patterns, it's an indicator of month
-                # or season. Everything's good and we move on to the next field.
-                if key.match(i):
-                    is_ok = True
-                    break
-            
-            # If the field didn't match any of the date_patterns, it is probably
-            # a descriptive word like 'Abstracts', 'INDEX', etc, or a 
-            # volume/number indicator like 'v.', 'no.', etc. If that's the 
-            # case, add it to the removal list.
-            if not is_ok:
-                to_remove.append(i)
-    
+        if i == ' ':
+            to_remove.append(i)
     # Remove fields from info that we don't want.
     for i in to_remove:
         info.remove(i)
-    
     # Sometimes, we might encounter a description like 'v 46 July 2005-June 2006',
     # where there is no space surrounding the hyphen (or slash), which produces
     # a field that looks like this '2005-June', which will not process correctly.
@@ -195,9 +179,11 @@ def get_info_from_description(item):
     item_info['chronology_i'] = ''
     item_info['chronology_j'] = ''
     item_info['chronology_k'] = ''
+    item_info['pages'] = ''
               
     mo_season = []
     years = []
+    pages = []
     delete_me = []
     has_chron_k = False
     last_index = len(info) - 1
@@ -207,19 +193,33 @@ def get_info_from_description(item):
         # If it's a hyphen, ampersand, or slash, add it to the deletion list.
         if r_exp.match(i):
             delete_me.append(i)
-        # If it's not a numeric value, add it to the month/season list and
-        # mark it for deletion.
+        
+        # If it's not a numeric value, check to see if it's a paginatin marker,
+        # otherwise, add it to the month/season list. In either case, mark it 
+        # for deletion.
         elif not has_digitsp.match(i):
-            mo_season.append(i)
-            delete_me.append(i)
-            # Check the item after this one.
-            if last_index > info.index(i):
-                look_ahead = info[info.index(i) + 1]
-                
-                # If it looks like a numeric value and not like a year. Mark it
-                # as a chronology_k (day) value.
-                if has_digitsp.match(look_ahead) and not is_yearp.match(look_ahead):
-                    has_chron_k = True
+            if has_pagination(i):
+                pp = snarf_numerals(info[info.index(i) + 1])
+                info[info.index(i) + 1] = pp
+                pages.append(pp)
+                delete_me.append(i)
+                delete_me.append(pp)
+            else:
+                for key in date_patterns:
+                    if key.match(i):
+                        mo_season.append(i)
+                        # Check the item after this one.
+                        if last_index > info.index(i):
+                            look_ahead = info[info.index(i) + 1]
+                            
+                            # If it looks like a numeric value and not like a year. Mark it
+                            # as a chronology_k (day) value.
+                            if has_digitsp.match(look_ahead) and not is_yearp.match(look_ahead):
+                                has_chron_k = True
+                        break
+                    
+                delete_me.append(i)
+
         # If it is a numeric value, sanitize it by running it through 
         # snarf_numerals()
         else:
@@ -228,7 +228,7 @@ def get_info_from_description(item):
 
             # If it looks like a year, add it to the years list and the deletion
             # list.
-            if is_yearp.match(i):
+            if is_yearp.match(i) and i not in pages:
                 years.append(i)
                 delete_me.append(i)
             
@@ -269,6 +269,11 @@ def get_info_from_description(item):
     elif len(mo_season) > 1: 
         item_info['chronology_j'] = '/'.join(mo_season)
         
+    if len(pages) == 1:
+        item_info['pages'] = pages[0]
+    elif len(pages) > 1:
+        item_info['pages'] = '/'.join(pages)
+        
     i_len = len(info)   
                    
     if i_len > 0:
@@ -283,9 +288,19 @@ def get_info_from_description(item):
             if i_len >= 3:
                 days_of_month = range(1,32)
                 for i in info[2:]:
-                    if int(i) not in days_of_month:
+                    try:
+                        if '/' not in i:
+                            if int(i) not in days_of_month:
+                                item_info = handle_record_error(item, item_info)
+                        else:
+                            days = i.split('/')
+                            for x in days:
+                                if int(x) not in days_of_month:
+                                    item_info = handle_record_error(item, item_info)
+                                    break
+                    except ValueError:
                         item_info = handle_record_error(item, item_info)
-                        break
+                        
                 if i_len == 3:
                     item_info['chronology_k'] = info[2]
     
@@ -312,16 +327,21 @@ def get_info_from_description(item):
             mo_split.remove(i)
     
         # Recombine multiple dates
-        if len(mo_split) > 1:
+        mo_len = len(mo_split)
+        if mo_len > 1:
             item_info['chronology_j'] = '/'.join(mo_split)
         # Otherwise, just set chronology_j to the one date
-        else:
+        elif mo_len == 1:
             item_info['chronology_j'] = mo_split[0]
         
     return item_info            
 
 def has_leading_zero(input):
     return input[0] == '0'
+
+def has_pagination(input):
+    pagination_p = re.compile(r'^pp', re.IGNORECASE)
+    return pagination_p.match(input)
             
 def handle_record_error(item, item_info):
     print('{} appears to be irregular. Please correct by hand.'.format(item))
@@ -474,7 +494,11 @@ def update_item_xml(item_xml, item_info):
             if i != 'id':
                 new_tag = soup.new_tag(i)
                 new_tag.string = item_info[i]
-                soup.find('item_data').find('description').insert_before(new_tag)
+                try:
+                    soup.find('item_data').find('description').insert_before(new_tag)
+                except:
+                    print('Item {} did not update properly'.format(item_info))
+                    
     
     new_xml = str(soup)
     
@@ -486,8 +510,10 @@ def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
     
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
-    requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
-
+    r = requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
+    if r.status_code != 200:
+        print(r.status_code)
+        print(r.text)
 
 
     
@@ -499,3 +525,25 @@ def update(mms_id, input_file, api_key, base_url):
             xml = get_item_xml(base_url, mms_id, holdings, item['id'], api_key)
             updated_xml = update_item_xml(xml, item)
             update_item(base_url, mms_id, holdings, item['id'], api_key, updated_xml)
+            
+            
+        # Find fields that include only alphabetic characters
+        """if not has_digitsp.match(i) and not r_exp.match(i):
+            is_ok = False
+            for key in date_patterns:
+                # If the field is in date_patterns, it's an indicator of month
+                # or season. Everything's good and we move on to the next field.
+                if key.match(i):
+                    is_ok = True
+                    break
+            
+            # If the field didn't match any of the date_patterns, it is probably
+            # a descriptive word like 'Abstracts', 'INDEX', etc, or a 
+            # volume/number indicator like 'v.', 'no.', etc. If that's the 
+            # case, add it to the removal list.
+            if not is_ok:
+                to_remove.append(i)
+    
+    # Remove fields from info that we don't want.
+    for i in to_remove:
+        info.remove(i)"""
