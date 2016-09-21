@@ -13,8 +13,8 @@ def get_file_path(btn, file):
 
 # Make sure to get the latest mms_id and api_key    
 def update_settings():
-    settings.mms_id = mms_id.get()
-    settings.api_key = api_key.get()
+    settings.mms_id = mms_id.get().strip()
+    settings.api_key = api_key.get().strip()
 
 # Fetch item info and save to file    
 def fetch_it():
