@@ -76,6 +76,6 @@ process correctly. Some examples:
 * v 19 07-08 (07-08 is treated like `enumeration_b` instead of `chronology_i`)
 * v 63 #1 P.1 JAN 1990 (P.1 is treated like `chronology_k` instead of `enumeration_c`)
 * v 20-21 1983-1984, c 2 (c 2 treated like `enumeration_b`)
-* For more known issues see notes.md
+* For more known issues see [notes.md](notes.md)
 
 
