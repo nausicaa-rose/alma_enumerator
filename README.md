@@ -73,13 +73,9 @@ Certain patterns pass through the parser without raising an error, but do not
 process correctly. Some examples:
 
 * no.51 12 Dec 2015 (12 is treated as `enumeration_b` rather than `chronology_k`)
-* v.164 no.5 Dec/Jan 2015 - Dec/Jan 16 (`chronology_j` ends up being 
-  '12/01/12/01', when in reality it's should probably be '12/01')
-* v 132 Dec 1915 May 1916 (Dec is treated like the entry for `enumeration_b` and 
-  1915 ends up in `chronology_k`)
-* v 19 07-08 (07-08 is treated like `chronology_i` instead of `chronology_j`)
+* v 19 07-08 (07-08 is treated like `enumeration_b` instead of `chronology_i`)
 * v 63 #1 P.1 JAN 1990 (P.1 is treated like `chronology_k` instead of `enumeration_c`)
-* v 4.no.4 2011 (volume and issue get merged into `enumeration_a` 44 because of lack of spaces)
-* v 20-21 1983-1984, c 2 (1983-1984 treated like `enumeration_b`, c 2 treated like `chronology_i`)
+* v 20-21 1983-1984, c 2 (c 2 treated like `enumeration_b`)
+* For more known issues see notes.md
 
 
