@@ -21,7 +21,10 @@ First make sure your settings are correct in `settings.py`, including the API
 key and the MMS ID of the title you wish to update. If you don't have an API
 key, you'll need to get one from the [Ex Libris Developer Network](https://developers.exlibrisgroup.com/).
 
-To use ae's graphical interface, run `ae_gui`.
+To use ae's graphical interface, run `ae_gui`. This will open up a window like
+the one below:
+
+![Example of ae_gui](/img/ae_gui_example.png)
 
 Alma Enumerator can also be used on the command line. To get enumeration and 
 chronology data out of item description fields, run `ae_fetch` or `ae fetch`.
