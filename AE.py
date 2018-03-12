@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from settings import api_key
+from settings import api_key, range_seperator
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -262,17 +262,17 @@ def get_info_from_description(item):
             if len(i) == 2:
                 years[years.index(i)] = years[years.index(i) - 1][:2] + i
 
-        item_info['chronology_i'] = '/'.join(years)
+        item_info['chronology_i'] = range_seperator.join(years)
 
     if len(mo_season) == 1:
         item_info['chronology_j'] = mo_season[0]
     elif len(mo_season) > 1:
-        item_info['chronology_j'] = '/'.join(mo_season)
+        item_info['chronology_j'] = range_seperator.join(mo_season)
 
     if len(pages) == 1:
         item_info['pages'] = pages[0]
     elif len(pages) > 1:
-        item_info['pages'] = '/'.join(pages)
+        item_info['pages'] = range_seperator.join(pages)
 
     i_len = len(info)
 
@@ -305,7 +305,7 @@ def get_info_from_description(item):
                     item_info['chronology_k'] = info[2]
 
                 if i_len > 3:
-                    item_info['chronology_k'] = '/'.join(info[2:])
+                    item_info['chronology_k'] = range_seperator.join(info[2:])
 
 
     # Make sure we convert the description field's representation of months,
@@ -329,7 +329,7 @@ def get_info_from_description(item):
         # Recombine multiple dates
         mo_len = len(mo_split)
         if mo_len > 1:
-            item_info['chronology_j'] = '/'.join(mo_split)
+            item_info['chronology_j'] = range_seperator.join(mo_split)
         # Otherwise, just set chronology_j to the one date
         elif mo_len == 1:
             item_info['chronology_j'] = mo_split[0]
@@ -355,17 +355,17 @@ def snarf_numerals(string):
     """
     This function is called by get_info_from_description(). It takes a string
     of arbitrary characters and returns only those characters that are numerals
-    or a slash. Hyphens in input are converted to slashes. All other characters
-    are discarded. Input like 'v.40-41' would be returned as '40/41'.
+    or the range_seperator. All other characters are discarded. Input like 'v.40-41' 
+    would be returned as '40/41' if the range_seperator is set to '/'.
     """
     # This pattern matches hyphens and slashes and is used to recognize and edit
     # date and issue ranges like 1995-1999 or 12/13.
     rp = re.compile(r'[-/&]')
 
-    numerals = rp.sub('/', ''.join([x
-                                    for x
-                                    in string
-                                    if x.isdigit() or rp.match(x) != None]))
+    numerals = rp.sub(range_seperator, ''.join([x
+                                                for x
+                                                in string
+                                                if x.isdigit() or rp.match(x) != None]))
 
     return numerals
 
