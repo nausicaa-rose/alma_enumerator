@@ -527,25 +527,3 @@ def update(mms_id, input_file, api_key, base_url):
             xml = get_item_xml(base_url, mms_id, holdings, item['id'], api_key)
             updated_xml = update_item_xml(xml, item)
             update_item(base_url, mms_id, holdings, item['id'], api_key, updated_xml)
-
-
-        # Find fields that include only alphabetic characters
-        """if not has_digitsp.match(i) and not r_exp.match(i):
-            is_ok = False
-            for key in date_patterns:
-                # If the field is in date_patterns, it's an indicator of month
-                # or season. Everything's good and we move on to the next field.
-                if key.match(i):
-                    is_ok = True
-                    break
-
-            # If the field didn't match any of the date_patterns, it is probably
-            # a descriptive word like 'Abstracts', 'INDEX', etc, or a
-            # volume/number indicator like 'v.', 'no.', etc. If that's the
-            # case, add it to the removal list.
-            if not is_ok:
-                to_remove.append(i)
-
-    # Remove fields from info that we don't want.
-    for i in to_remove:
-        info.remove(i)"""
