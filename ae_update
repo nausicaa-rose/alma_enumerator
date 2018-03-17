@@ -1,30 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""ae_update
-
-Usage:
-    ae_update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [(-a | --api-key) <api>]
-"""
-
 from settings import api_key, mms_id, input_file, base_url
 from AE import update
-from docopt import docopt       
+import argparse
 
-if __name__ == '__main__':
-    args = docopt(__doc__)
-    
-    if args['-m'] or args['--mms-id']:
-        mms_id = args['<mms>']
+parser = argparse.ArgumentParser()
+parser.add_argument('-m', '--mms-id')
+parser.add_argument('-i', '--input-file')
+parser.add_argument('-a', '--api-key')
+args = parser.parse_args()
 
-    if args['-i'] or args['--input-file']:
-        input_file = args['<if>']  
+if args.mms_id is not None:
+    mms_id = args.mms_id
 
-    if args['-a'] or args['--api-key']:
-        api_key = args['<api>']
+if args.input_file is not None:
+    input_file = args.input_file
 
-    update(mms_id, input_file, api_key, base_url)
-    
-    
+if args.api_key is not None:
+    api_key = args.api_key
 
-        
-
+update(mms_id, input_file, api_key, base_url)
