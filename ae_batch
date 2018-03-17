@@ -3,7 +3,7 @@
 """ae_batch
 
 Usage:
-    ae_batch [(-i | --input-file) <if>] [(-o | --output-file) <of>] [(-e | --error-file) <ef>] [(-a | --api-key) <api>] <lf>      
+    ae_batch [-i | --input-file <if>] [-o | --output-file <of>] [-e | --error-file <ef>] [-a | --api-key <api>] <lf>
 """
 
 from settings import api_key, mms_id, input_file, output_file, error_file, base_url
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     mms_id_list = []
     with open(list_file, 'r') as fh:
         for line in fh:
-            list_file.append(line.strip())
+            mms_id_list.append(line.strip())
 
     for mms_id in mms_id_list:
         fetch(mms_id, output_file, error_file, api_key, base_url)
