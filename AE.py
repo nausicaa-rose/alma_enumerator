@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from settings import api_key, range_seperator
+from settings import range_seperator
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -25,7 +25,7 @@ def get_holdings(base_url, mms_id, api_key):
     return holdings_list
 
 
-def get_item_info(base_url, mms_id, holdings_id):
+def get_item_info(base_url, mms_id, holdings_id, api_key):
     """
     Get the enumeration, chronology, and item id for each item for each holdings
     record.
@@ -425,7 +425,7 @@ def fetch(mms_id, output_file, error_file, api_key, base_url):
         with open(output_file, 'a', encoding='utf-8') as fh:
             fh.write('{}\n'.format(h))
 
-        item_info = get_item_info(base_url, mms_id, h)
+        item_info = get_item_info(base_url, mms_id, h, api_key)
         write_header_to_csv(output_file, item_info)
         output_to_csv(output_file, error_file, item_info)
 
