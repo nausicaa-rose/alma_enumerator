@@ -9,12 +9,10 @@ saved in item description fields but not in the corresponding enumeration and
 chronology fields.
 
 ## Requirements
-* Python 3 (Has been tested and works with Python 3.4 and 3.5. Probably works
-  with earlier versions of Python 3.)
+* Python 3.5+ 
 * External dependencies
     * [Requests](http://requests.readthedocs.io/en/master/) 
     * [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/)
-    * [DocOpt](http://docopt.org/) 
 
 ## Usage
 First make sure your settings are correct in `settings.py`, including the API
@@ -52,7 +50,7 @@ updating settings.py each time you make change `mms_id`, you can.
 
 `ae_fetch` accepts:
 
-    ae_fetch [(-m | --mms-id) <mms>] [(-o | --output-file) <of>] [(-e | --error-file) <ef>] [(-a | --api-key) <api>]
+    ae_fetch [-m | --mms-id <mms>] [-o | --output-file <of>] [-e | --error-file <ef>] [-a | --api-key <api>]
 
 So you could specify an mms_id by typing `ae_fetch -m 999999999999999999` or
 `ae_fetch --mms-id 999999999999999999` and `ae_fetch` would use the MMS ID 
@@ -71,6 +69,25 @@ an IDE like Spyder or PyCharm that will allow you to open and then run
 
 ![Example of running ae_fetch in Pycharm](/img/pycharm_run_example.png)
 
+If you're feeling daring you can also batch process files without checking the output
+of `ae_fetch`, you can use `ae_batch` or `ae batch`. 
+
+`ae_batch` accepts:
+    ae_batch [-i | --input-file <if>] [-o | --output-file <of>] [-e | --error-file <ef>] (-a | --api-key <api>] <lf>      
+
+Instead of taking a single MMS ID, ae_batch takes a file with one bibliographic 
+MMS ID per line such as:
+
+    1234567890
+    0987654321
+    0192837465
+    1029384756
+
+It then will download and process items associated with each MMS ID, just like 
+`ae_fetch` before updating each item a la `ae_update`. This has the potential to 
+speed up processing significantly, but at the risk of errors potentially going
+uncaught.
+
 ## Known issues
 Certain patterns pass through the parser without raising an error, but do not 
 process correctly. Some examples:
@@ -80,5 +97,9 @@ process correctly. Some examples:
 * v 63 #1 P.1 JAN 1990 (P.1 is treated like `chronology_k` instead of `enumeration_c`)
 * v 20-21 1983-1984, c 2 (c 2 treated like `enumeration_b`)
 * For more known issues see [notes.md](notes.md)
+
+Because the updating function downloads the XML for each record, modifies it,
+and uploads it back to the server one at a time, it is quite slow, especially when
+processing large numbers of records.
 
 
