@@ -30,7 +30,7 @@ error_file = ''
 
 # The location of the input file for the records that can be automatically updated. Unless
 # you want to edit the output file and save it to with a new name, setting the input file to
-# match the output file for get_issue_info.py is probably what you'll want.
+# match the output file for ae_fetch is probably what you'll want.
 input_file = output_file
 
 #--- end configuration variables -------
