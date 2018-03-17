@@ -25,7 +25,7 @@ if __name__ == '__main__':
     if args['-a'] or args['--api-key']:
         api_key = args['<api>']
 
-    list_file = args['<li>']
+    list_file = args['<lf>']
 
     mms_id_list = []
     with open(list_file, 'r') as fh:
