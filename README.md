@@ -59,7 +59,7 @@ key.
 
 `ae_update` accepts:
 
-    ae_update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [(-a | --api-key) <api>]
+    ae_update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [-e | --error-file <ef>] [(-a | --api-key) <api>]
                                                       
 If you're not comfortable working on the command line, run `ae_gui` or use 
 an IDE like Spyder or PyCharm that will allow you to open and then run 
