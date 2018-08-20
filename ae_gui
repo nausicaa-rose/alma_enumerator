@@ -11,20 +11,24 @@ def get_file_path(btn, file):
     setattr(settings, file, filedialog.askopenfilename())
     btn.configure(text=getattr(settings, file))
 
+
 # Make sure to get the latest mms_id and api_key    
 def update_settings():
     settings.mms_id = mms_id.get().strip()
     settings.api_key = api_key.get().strip()
+
 
 # Fetch item info and save to file    
 def fetch_it():
     update_settings()
     fetch(settings.mms_id, settings.output_file, settings.error_file, settings.api_key, settings.base_url)
 
+
 # Update item info from file
 def update_it():
     update_settings()
-    update(settings.mms_id, settings.input_file, settings.api_key, settings.base_url)
+    update(settings.mms_id, settings.input_file, settings.error_file, settings.api_key, settings.base_url)
+
     
 # Set up window    
 root = Tk()

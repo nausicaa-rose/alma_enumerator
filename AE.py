@@ -406,7 +406,7 @@ def output_to_csv(output_file, error_file, item_info, delimeter=','):
     # Write out the item id and description for those descriptions that we couldn't handle
     with open(error_file, 'a', encoding='utf-8') as fh:
         for item in item_errors:
-            fh.write('{}\n'.format(delimeter.join(item.values())))
+            fh.write(f'Description parsing failure. {delimeter.join(item.values())}.\n')
 
 
 def fetch(mms_id, output_file, error_file, api_key, base_url):
@@ -485,7 +485,7 @@ def get_item_xml(base_url, mms_id, holdings_id, item_id, api_key):
     return item_xml
 
 
-def update_item_xml(item_xml, item_info):
+def update_item_xml(item_xml, item_info, error_file):
     soup = BeautifulSoup(item_xml, 'xml')
     for i in item_info:
         if soup.find(i):
@@ -499,7 +499,8 @@ def update_item_xml(item_xml, item_info):
                 try:
                     soup.find('item_data').find('description').insert_before(new_tag)
                 except:
-                    print('Item {} did not update properly'.format(item_info))
+                    with open(error_file, 'a', encoding='utf-8') as fh:
+                        fh.write(f'XML update failure. The XML file for {item_info} did not update properly.')
 
 
     new_xml = str(soup)
@@ -507,23 +508,22 @@ def update_item_xml(item_xml, item_info):
     return new_xml
 
 
-def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml):
+def update_item(base_url, mms_id, holdings_id, item_id, api_key, item_xml, error_file):
     headers = {'content-type':'application/xml'}
     query = 'bibs/{}/holdings/{}/items/{}?apikey={}'
 
     url = ''.join([base_url, query.format(mms_id, holdings_id, item_id, api_key)])
     r = requests.put(url, headers=headers, data=item_xml.encode('utf-8'))
     if r.status_code != 200:
-        print(r.status_code)
-        print(r.text)
+        with open(error_file, 'a', encoding='utf-8') as fh:
+            fh.write(f'XML upload failure. HTTP status: {r.status_code} -- {r.text}\n')
 
 
-
-def update(mms_id, input_file, api_key, base_url):
+def update(mms_id, input_file, error_file, api_key, base_url):
     items_to_update = get_info_from_csv(input_file)
 
     for holdings in items_to_update:
         for item in items_to_update[holdings]:
             xml = get_item_xml(base_url, mms_id, holdings, item['id'], api_key)
-            updated_xml = update_item_xml(xml, item)
-            update_item(base_url, mms_id, holdings, item['id'], api_key, updated_xml)
+            updated_xml = update_item_xml(xml, item, error_file)
+            update_item(base_url, mms_id, holdings, item['id'], api_key, updated_xml, error_file)

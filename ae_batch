@@ -37,4 +37,4 @@ with open(args.mms_id_file, 'r') as fh:
 
 for mms_id in mms_id_list:
     fetch(mms_id, output_file, error_file, api_key, base_url)
-    update(mms_id, input_file, api_key, base_url)
+    update(mms_id, input_file, error_file, api_key, base_url)

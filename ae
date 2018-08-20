@@ -37,7 +37,7 @@ if  args.command == 'fetch':
     fetch(mms_id, output_file, error_file, api_key, base_url)
 
 if args.command == 'update':
-    update(mms_id, input_file, api_key, base_url)
+    update(mms_id, input_file, error_file, api_key, base_url)
 
 if args.command == 'batch':
     run(['ae_batch', '-i', input_file, '-o', output_file, '-e', error_file, '-a', api_key, args.mms_id_file])
