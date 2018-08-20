@@ -500,8 +500,7 @@ def update_item_xml(item_xml, item_info, error_file):
                     soup.find('item_data').find('description').insert_before(new_tag)
                 except:
                     with open(error_file, 'a', encoding='utf-8') as fh:
-                        fh.write(f'XML update failure. The XML file for {item_info} did not update properly.')
-
+                        fh.write(f'XML update failure. The XML file for {item_info} did not update properly. Unsuccessful tag: {str(new_tag)}. XML at time of failure: {str(soup)}')
 
     new_xml = str(soup)
 
