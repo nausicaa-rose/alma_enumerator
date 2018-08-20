@@ -59,7 +59,7 @@ key.
 
 `ae_update` accepts:
 
-    ae_update [(-m | --mms-id) <mms>] [(-i | --input-file) <if>] [-e | --error-file <ef>] [(-a | --api-key) <api>]
+    ae_update [-m | --mms-id <mms>] [-o | --output-file <of>] [-e | --error-file <ef>] [-a | --api-key <api>]
                                                       
 If you're not comfortable working on the command line, run `ae_gui` or use 
 an IDE like Spyder or PyCharm that will allow you to open and then run 
@@ -73,7 +73,7 @@ If you're feeling daring you can also batch process files without checking the o
 of `ae_fetch`, you can use `ae_batch` or `ae batch`. 
 
 `ae_batch` accepts:
-    ae_batch [-i | --input-file <if>] [-o | --output-file <of>] [-e | --error-file <ef>] (-a | --api-key <api>] <lf>      
+    ae_batch [-m | --mms-id <mms>] [-o | --output-file <of>] [-e | --error-file <ef>] [-a | --api-key <api>] <lf>      
 
 Instead of taking a single MMS ID, ae_batch takes a file with one bibliographic 
 MMS ID per line such as:
