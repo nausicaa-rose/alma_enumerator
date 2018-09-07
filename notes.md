@@ -158,14 +158,6 @@ represents March 2, will be treated as the issue number.
          'enumeration_a': '40',
          'enumeration_b': '40'}
 
-* v 97 2000 pp 1-1318 
-
-        {'chronology_i': '2000',
-         'chronology_j': '',
-         'chronology_k': '',
-         'enumeration_a': '97',
-         'enumeration_b': '1/1318'}
- 
 * v 99 December 10, 2002 Suppl.4
 
          {'chronology_i': '2002',
