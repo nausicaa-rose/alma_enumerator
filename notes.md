@@ -118,7 +118,6 @@ represents March 2, will be treated as the issue number.
 * v 18 #7-10 V 19 #1-2 1974-5
 * v.302 no.21 & 22 May 23/30 2016 [Should handle]
 
-        Out[17]: 
         {'chronology_i': '2016',
          'chronology_j': '05',
          'chronology_k': '22/23/30',
@@ -135,12 +134,14 @@ represents March 2, will be treated as the issue number.
 
 * v 74 Dec. 21,1998-Jan. 4,1999 [Should handle]
 
-        {'chronology_i': '',
+        {'enumeration_a': '74',
+         'enumeration_b': '21',
+         'chronology_i': '1998/1999',
          'chronology_j': '12/01',
-         'chronology_k': '41999',
-         'enumeration_a': '74',
-         'enumeration_b': '211998'}
-         no.220(2017:Spring)
+         'chronology_k': '4',
+         'pages': ''}
+
+* no.220(2017:Spring)
  
 * no.5 & 6 June & July 2016 [Should handle]
 
