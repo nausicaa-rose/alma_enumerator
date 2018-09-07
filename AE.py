@@ -194,7 +194,7 @@ def get_info_from_description(item):
         if r_exp.match(i):
             delete_me.append(i)
 
-        # If it's not a numeric value, check to see if it's a paginatin marker,
+        # If it's not a numeric value, check to see if it's a pagination marker,
         # otherwise, add it to the month/season list. In either case, mark it
         # for deletion.
         elif not has_digitsp.match(i):
