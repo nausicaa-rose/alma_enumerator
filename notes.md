@@ -7,7 +7,7 @@ enumeration. That is, "no. 1 2 Mar 2015" will be treated as
 if the first number is the volume number and the second, which
 represents March 2, will be treated as the issue number.
 
-#Can handle:
+# Can handle:
 
 * v.43 no.2 Win 2016
 * v 22 1994-95
@@ -66,7 +66,7 @@ represents March 2, will be treated as the issue number.
 * v.302 no.2-3 Jan 11 2016 - Jan 18 2016
 * v 49 #5 MAR 9,1984
 
-#Identifies as error:
+# Identifies as error:
 
 * v.30:no.7(2016:July/Aug.)
 * v.30:no.8(2016:Sept.) 
@@ -81,8 +81,9 @@ represents March 2, will be treated as the issue number.
 * v 12 #1 FEB 2976
 * 100,02/04,1997/1998,v 100 no 2 Feb 1997-v 101 no 2 April 
 * v. 72 Sept 06-May 07
+* v.306 no.19 Nov 162011
 
-#Passes through, but doesn't process correctly:
+# Passes through, but doesn't process correctly:
 
 * 1998,,2322992980002843,101/2,2
 * v. 25 no. 4 (Supplement- Winter Bird Highlights v.2)
@@ -93,7 +94,6 @@ represents March 2, will be treated as the issue number.
 * v 132 Dec 1915 May 1916 (Dec is treated like the entry for enumeration_b and 1915 ends up in chronology_k)
 * v 19 07-08 (07-08 is treated like chronology_i instead of chronology_j)
 * v 63 #1 P.1 JAN 1990 (P.1 is treated like chronology_k instead of enumeration_c)
-* v.306 no.19 Nov 162011 (162011 is not a valid year)
 * v 20-21 1983-1984, c 2 (1983-1984 treated like `enumeration_b`, c 2 treated like `chronology_i`)
 * Apr 2015 150th Anniversary issue (Apr dropped, 2015 treated like `enumeration_a`, 150th treated like `chronology_i`)
 * v 82 Nov. 2006-Jan. 1, 2007 (passes through correctly, but chronology_k will be unclear and should probably have been omitted from the description)
