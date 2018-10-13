@@ -10,8 +10,7 @@
 api_key=''
 
 # This is simply the seperator for ranges for issues (or bound volumes) that cover
-# multiple seasons, issues, years, etc. You can use whatever character or characters
-# you want here, but the sensible options are most likely going to be '-' or '/'
+# multiple seasons, issues, years, etc. Currently supported options are: '-' or '/'.
 range_seperator = '/'
 
 # This is the ID of the bib record for which you want to update item information.
