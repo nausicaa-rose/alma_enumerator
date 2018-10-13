@@ -437,7 +437,9 @@ def fetch(mms_id, output_file, error_file, api_key, base_url):
 def get_info_from_csv(input_file):
     holdings_p = re.compile(r'^\d{16,16}$')
     header_p = re.compile(r'^[a-z_,]+$')
-    items_p = re.compile(r'^[0-9,/]+$')
+    # If support for additional range separators is added the
+    # new separator character(s) will need to be added to items_p.
+    items_p = re.compile(r'^[0-9,/-]+$')
     item_info = {}
     with open(input_file, 'r', encoding='utf-8') as fh:
         lines = fh.readlines()
